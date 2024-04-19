@@ -1,0 +1,4 @@
+apiVersion: v2
+name: hdfs-cluster
+description: A Helm chart for Stackable HDFS cluster
+version: 0.1.0

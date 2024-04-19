@@ -1,0 +1,79 @@
+repositories:
+  - name: metrics-server
+    url: https://kubernetes-sigs.github.io/metrics-server/
+  - name: spark-operator
+    url: https://kubeflow.github.io/spark-operator
+  - name: stackable-stable
+    url: https://repo.stackable.tech/repository/helm-stable/
+
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  cleanupOnFail: true
+  createNamespace: false
+
+releases:
+
+  # not available per default when installing k8s with kind
+  - name: metrics-server
+    chart: metrics-server/metrics-server
+    namespace: kube-system
+    values:
+      - args:
+          - "--kubelet-insecure-tls"
+
+  - name: zookeeper-operator
+    chart: stackable-stable/zookeeper-operator
+    version: 24.3.0
+
+  - name: hdfs-operator
+    chart: stackable-stable/hdfs-operator
+    version: 24.3.0
+    needs:
+      - zookeeper-operator
+
+  - name: commons-operator
+    chart: stackable-stable/commons-operator
+    version: 24.3.0
+    needs:
+      - hdfs-operator
+
+  - name: secret-operator
+    chart: stackable-stable/secret-operator
+    version: 24.3.0
+    needs:
+      - commons-operator
+
+  - name: listener-operator
+    chart: stackable-stable/listener-operator
+    version: 24.3.0
+    needs:
+      - secret-operator
+
+  - name: zookeeper-cluster
+    chart: "./charts/zookeeper"
+    needs:
+      - listener-operator
+
+  - name: hdfs-cluster
+    chart: "./charts/hdfs"
+    needs:
+      - zookeeper-cluster
+
+  - name: spark-operator
+    chart: spark-operator/spark-operator
+    version: 1.2.7
+
+  - name: mongo-db
+    chart: oci://registry-1.docker.io/bitnamicharts/mongodb
+    version: 15.1.4
+    values:
+      - extraEnvVars:
+        # This is required on Apple Silicon https://github.com/docker/for-mac/issues/6620
+        - name: EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU
+          value: "1"
+    set:
+      - name: auth.rootPassword
+        value: {{ requiredEnv "MONGODB_USERNAME" }}
+      - name: auth.rootPassword
+        value: {{ requiredEnv "MONGODB_PASSWORD" }}
