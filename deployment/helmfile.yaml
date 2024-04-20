@@ -74,6 +74,10 @@ releases:
           value: "1"
     set:
       - name: auth.rootPassword
-        value: {{ requiredEnv "MONGODB_USERNAME" }}
-      - name: auth.rootPassword
         value: {{ requiredEnv "MONGODB_PASSWORD" }}
+      - name: auth.usernames
+        values:
+          - {{ requiredEnv "MONGODB_USERNAME" }}
+      - name: auth.databases
+        values:
+          - {{ requiredEnv "MONGODB_DBNAME" }}
