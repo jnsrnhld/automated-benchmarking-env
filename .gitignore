@@ -137,4 +137,4 @@ dmypy.json
 *.iml
 
 # kubespray user for deploying k8s cluster
-kubespray/*
+**/kubespray/

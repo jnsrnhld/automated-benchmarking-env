@@ -67,33 +67,25 @@
       register: helm_installed
       ignore_errors: true
 
-    - name: Install helm
-      ansible.builtin.shell: |
-        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get
-        chmod +x get_helm.sh
-        ./get_helm.sh -v "v{{helm_version}}"
-      when: helm_installed.rc != 0
+    - name: Download Helm installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/master/scripts/get
+        dest: /tmp/get_helm.sh
+        mode: '0755'
+      when: helm_installed.failed
+      become: yes
 
-- name: Deploy metrics-server helm chart
-  hosts: leader
-  vars_files:
-    - vars.yaml
-  tasks:
-    - name: Add metrics-server repository
-      kubernetes.core.helm_repository:
-        name: metrics-server
-        repo_url: https://kubernetes-sigs.github.io/metrics-server/
-    - name: Deploy metrics-server helm chart
-      kubernetes.core.helm:
-        name: metrics-server
-        chart_ref: metrics-server/metrics-server
-        chart_version: "{{ metrics_server_version }}"
-        release_namespace: kube-system
-        atomic: true
-        wait: true
-        values:
-          args:
-            - "--kubelet-insecure-tls"
+    - name: Install Helm
+      ansible.builtin.command: /tmp/get_helm.sh -v "v{{ helm_version }}"
+      when: helm_installed.failed
+      become: yes
+
+    - name: Remove Helm installation script
+      ansible.builtin.file:
+        path: /tmp/get_helm.sh
+        state: absent
+      when: helm_installed.failed
+      become: yes
 
 - name: Deploy spark-operator helm chart
   hosts: leader
@@ -130,3 +122,9 @@
         release_namespace: "{{ k8s_namespace }}"
         atomic: true
         wait: true
+
+#- name: Install HDFS cluster
+#  hosts: follower
+#  vars_files:
+#    - vars.yaml
+#  tasks:
