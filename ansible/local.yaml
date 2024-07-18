@@ -1,0 +1,14 @@
+# all cloud machines
+remote:
+  hosts:
+    localhost:
+      vars:
+        ansible_connection: local
+        ansible_python_interpreter: "{{ansible_playbook_python}}"
+  children:
+    # coordinating k8s via kubectl/helm, running bridge service, scaling services, database, etc.
+    leader:
+      localhost:
+    # all machines that contain the batch processing framework and/or hdfs
+    follower:
+      localhost:

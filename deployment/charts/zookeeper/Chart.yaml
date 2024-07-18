@@ -1,4 +1,0 @@
-apiVersion: v2
-name: hdfs-cluster
-description: A Helm chart for Stackable Apache Zookeeper cluster
-version: 0.1.0

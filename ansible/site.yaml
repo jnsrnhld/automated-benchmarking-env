@@ -1,0 +1,132 @@
+---
+# for simplicity, we assume all nodes require Java for Spark or HDFS
+- name: Install JDK on all nodes (for Spark and HDFS)
+  hosts: remote
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Check if JDK is installed
+      command: java --version
+      register: java_installed
+      ignore_errors: true
+
+    - name: Download Java archive
+      ansible.builtin.get_url:
+        url: "https://download.oracle.com/java/{{ java_version }}/latest/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
+        dest: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
+        mode: '0644'
+      when: java_installed.failed
+      become: yes
+
+    - name: Create directory for Java installation
+      ansible.builtin.file:
+        path: "/opt/java/jdk-{{ java_version }}"
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Install JDK
+      ansible.builtin.unarchive:
+        src: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
+        dest: /opt/java/jdk-{{ java_version }}
+        remote_src: yes
+        extra_opts: ['--strip-components=1']
+      when: java_installed.failed
+      become: yes
+
+    - name: Create profile script for JAVA_HOME and PATH
+      ansible.builtin.copy:
+        dest: /etc/profile.d/jdk.sh
+        content: |
+          export JAVA_HOME="/opt/java/jdk-{{ java_version }}"
+          export PATH=$JAVA_HOME/bin:$PATH
+        mode: '0755'
+      when: java_installed.failed
+      become: yes
+
+- name: Check kubectl is present on leader node
+  hosts: leader
+  tasks:
+    - name: Check if kubectl is installed and connected to cluster
+      command: kubectl cluster-info
+      register: kubectl_installed
+      ignore_errors: true
+
+    - name: Fail playbook
+      ansible.builtin.fail:
+        msg: kubectl not installed on leader node. Can't continue playbook without a present k8s deployment.
+      when: kubectl_installed.rc != 0
+
+- name: Install helm on leader node
+  hosts: leader
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Check if helm is installed
+      command: which helm
+      register: helm_installed
+      ignore_errors: true
+
+    - name: Install helm
+      ansible.builtin.shell: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get
+        chmod +x get_helm.sh
+        ./get_helm.sh -v "v{{helm_version}}"
+      when: helm_installed.rc != 0
+
+- name: Deploy metrics-server helm chart
+  hosts: leader
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Add metrics-server repository
+      kubernetes.core.helm_repository:
+        name: metrics-server
+        repo_url: https://kubernetes-sigs.github.io/metrics-server/
+    - name: Deploy metrics-server helm chart
+      kubernetes.core.helm:
+        name: metrics-server
+        chart_ref: metrics-server/metrics-server
+        chart_version: "{{ metrics_server_version }}"
+        release_namespace: kube-system
+        atomic: true
+        wait: true
+        values:
+          args:
+            - "--kubelet-insecure-tls"
+
+- name: Deploy spark-operator helm chart
+  hosts: leader
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Add spark-operator repository
+      kubernetes.core.helm_repository:
+        name: spark-operator
+        repo_url: https://kubeflow.github.io/spark-operator
+    - name: Deploy spark-operator helm chart
+      kubernetes.core.helm:
+        name: spark-operator
+        chart_ref: spark-operator/spark-operator
+        chart_version: "{{ spark_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+- name: Deploy MongoDB operator helm chart
+  hosts: leader
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Add MongoDB repository
+      kubernetes.core.helm_repository:
+        name: mongodb
+        repo_url: https://mongodb.github.io/helm-charts
+    - name: Deploy MongoDB operator helm chart
+      kubernetes.core.helm:
+        name: community-operator
+        chart_ref: mongodb/community-operator
+        chart_version: "{{ mongodb_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true

@@ -135,3 +135,6 @@ dmypy.json
 **/.idea/
 **/target/
 *.iml
+
+# kubespray user for deploying k8s cluster
+kubespray/*

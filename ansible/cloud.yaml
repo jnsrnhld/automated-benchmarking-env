@@ -1,0 +1,18 @@
+# all cloud machines
+remote:
+  hosts:
+    leaderNode:
+      ansible_host: 34.32.61.19
+    workerNode1:
+      ansible_host: 34.32.19.144
+
+# coordinating k8s via kubectl/helm, running bridge service, scaling services, database, etc.
+leader:
+  hosts:
+    leaderNode:
+
+# all machines that contain the batch processing framework and/or hdfs
+follower:
+  hosts:
+    leaderNode:
+    workerNode1:
