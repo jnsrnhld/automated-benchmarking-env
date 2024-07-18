@@ -1,2 +1,3 @@
+ansible==10.2.0
 kubernetes
 PyYAML

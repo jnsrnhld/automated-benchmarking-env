@@ -7,7 +7,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-###### Deploy k8s cluster via kubespray (optional)
+##### Deploy k8s cluster via kubespray (optional)
 
 ```shell
 # setup kubespray from within ansible dir
