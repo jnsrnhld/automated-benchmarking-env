@@ -1,0 +1,118 @@
+---
+- name: Template the test Spark
+  host: localhost
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Create a temporary directory for templating
+      ansible.builtin.file:
+        path: "tmp/charts"
+        state: directory
+        mode: '0755'
+
+    - name: Template the Zookeeper cluster file
+      template:
+        src: ansible/charts/spark-pi.yaml
+        dest: /tmp/charts/spark-pi.yaml
+
+- name: Deploy a test Spark application to the k8s cluster
+  hosts: leader
+  tasks:
+    - name: Deploy spark-pi application
+      kubernetes.core.helm:
+        name: spark-pi
+        chart_ref: /tmp/charts/spark-pi.yaml
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Check for SparkApplicationTerminated event
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Event
+        namespace: default
+        field_selectors:
+          - involvedObject.name=spark-pi
+          - reason=SparkApplicationTerminated
+        wait_sleep: 10
+        wait_timeout: 360
+      register: spark_app_events
+
+- name: Test HDFS Cluster with WebHDFS
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Deploy WebHDFS application
+      kubernetes.core.helm:
+        name: webhdfs
+        chart_ref: ansible/charts/webhdfs.yaml
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Verify cluster is empty
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XGET \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/?op=LISTSTATUS\""
+      failed_when: result | length > 0
+
+    - name: Create testdata.txt file locally
+      copy:
+        dest: ./testdata.txt
+        content: |
+          Sample test data for HDFS.
+
+    - name: Copy testdata.txt to helper pod
+      kubernetes.core.k8s_cp:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        remote_path: /tmp
+        local_path: ./testdata.txt
+
+    - name: Issue initial PUT command to create file in HDFS
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XPUT -T /tmp/testdata.txt \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/testdata.txt?user.name=stackable&op=CREATE&noredirect=true\""
+      register: put_result
+
+    - name: Extract location URL from PUT response
+      set_fact:
+        location_url: "{{ put_result.stdout }}"
+
+    - name: Issue second PUT command to complete file creation
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: curl -s -XPUT -T /tmp/testdata.txt "{{ location_url }}"
+
+    - name: Recheck status to verify file creation
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XGET \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/?op=LISTSTATUS\""
+      register: status_result
+
+    - name: Parse status_result stdout as JSON
+      set_fact:
+        file_status: "{{ status_result.stdout | from_json }}"
+
+    - name: Verify the file_status contains the created file
+      assert:
+        that:
+          - file_status.FileStatuses.FileStatus | length > 0
+          - file_status.FileStatuses.FileStatus[0].pathSuffix == "testdata.txt"
+          - file_status.FileStatuses.FileStatus[0].length > 0
+
+    - name: Delete the testdata.txt file from HDFS
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XDELETE \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/testdata.txt?user.name=stackable&op=DELETE\""
+
+    - name: Clean up local testdata.txt file
+      file:
+        path: ./testdata.txt
+        state: absent

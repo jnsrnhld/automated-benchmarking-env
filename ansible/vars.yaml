@@ -4,6 +4,17 @@ helm_version: "3.15.1"
 metrics_server_version: "3.12.1"
 spark_operator_version: "1.4.2"
 mongodb_version: "0.10.0"
+stackable_operator_version: "24.3.0"
+zookeeper_version: "3.8.3"
+hdfs_version: "3.3.6"
+spark_version: "3.5.0"
 
-# vars
+# k8s
 k8s_namespace: "default"
+
+# hdfs
+hdfs_cluster_name: "hdfs-cluster"
+zookeeper_replicas: 1
+name_node_replicas: 2
+data_node_replicas: 4
+journal_node_replicas: 1

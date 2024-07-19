@@ -1,0 +1,270 @@
+---
+- name: Install Ansible/pip dependencies on leader machine
+  hosts: leader
+  become: true
+  become_user: root
+  tasks:
+    # TODO also install python≥
+    - name: Check if pip is installed
+      command: python3 -m pip -V
+      register: pip_installed
+      ignore_errors: true
+
+    - name: Download pip installer
+      ansible.builtin.get_url:
+        url:  https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+        mode: '0644'
+      when: pip_installed.failed
+
+    - name: Run pip installer
+      command: python3 /tmp/get-pip.py --user
+      when: pip_installed.failed
+
+    - name: Install pre-requisites
+      pip:
+        name:
+          - openshift
+          - pyyaml
+          - kubernetes
+      when: pip_installed.failed
+
+# for simplicity, we assume all nodes require Java for Spark or HDFS
+- name: Install JDK on all nodes (for Spark and HDFS)
+  hosts: remote
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Check if JDK is installed
+      command: "/opt/java/jdk-{{ java_version }}/bin/java --version"
+      register: java_installed
+      ignore_errors: true
+
+    - name: Download Java archive
+      ansible.builtin.get_url:
+        url: "https://download.oracle.com/java/{{ java_version }}/latest/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
+        dest: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
+        mode: '0644'
+      when: java_installed.failed
+
+    - name: Create directory for Java installation
+      ansible.builtin.file:
+        path: "/opt/java/jdk-{{ java_version }}"
+        state: directory
+        mode: '0755'
+      when: java_installed.failed
+
+    - name: Install JDK
+      ansible.builtin.unarchive:
+        src: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
+        dest: /opt/java/jdk-{{ java_version }}
+        remote_src: yes
+        extra_opts: ['--strip-components=1']
+      when: java_installed.failed
+
+    - name: Create profile script for JAVA_HOME and PATH
+      ansible.builtin.copy:
+        dest: /etc/profile.d/jdk.sh
+        content: |
+          export JAVA_HOME="/opt/java/jdk-{{ java_version }}"
+          export PATH=$JAVA_HOME/bin:$PATH
+        mode: '0755'
+      when: java_installed.failed
+
+- name: Check kubectl is present on leader node
+  hosts: leader
+  become: yes
+  become_user: root
+  tasks:
+    - name: Check if kubectl is installed and connected to cluster
+      command: kubectl cluster-info
+      register: kubectl_installed
+      ignore_errors: true
+
+    - name: Fail playbook
+      ansible.builtin.fail:
+        msg: kubectl not installed on leader node. Can't continue playbook without a present k8s deployment.
+      when: kubectl_installed.rc != 0
+
+- name: Install helm on leader node
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Check if helm is installed
+      command: which helm
+      register: helm_installed
+      ignore_errors: true
+
+    - name: Download Helm installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/master/scripts/get
+        dest: /tmp/get_helm.sh
+        mode: '0755'
+      when: helm_installed.failed
+      become: yes
+
+    - name: Install Helm
+      ansible.builtin.command: /tmp/get_helm.sh -v "v{{ helm_version }}"
+      when: helm_installed.failed
+      become: yes
+
+    - name: Remove Helm installation script
+      ansible.builtin.file:
+        path: /tmp/get_helm.sh
+        state: absent
+      when: helm_installed.failed
+      become: yes
+
+- name: Deploy spark-operator helm chart
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Add spark-operator repository
+      kubernetes.core.helm_repository:
+        name: spark-operator
+        repo_url: https://kubeflow.github.io/spark-operator
+
+    - name: Deploy spark-operator helm chart
+      kubernetes.core.helm:
+        name: spark-operator
+        chart_ref: spark-operator/spark-operator
+        chart_version: "{{ spark_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+- name: Deploy MongoDB operator helm chart
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Add MongoDB repository
+      kubernetes.core.helm_repository:
+        name: mongodb
+        repo_url: https://mongodb.github.io/helm-charts
+
+    - name: Deploy MongoDB operator helm chart
+      kubernetes.core.helm:
+        name: community-operator
+        chart_ref: mongodb/community-operator
+        chart_version: "{{ mongodb_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+- name: Install HDFS Operator's
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Add stackable-stable repository
+      kubernetes.core.helm_repository:
+        name: stackable-stable
+        repo_url: https://repo.stackable.tech/repository/helm-stable/
+
+    - name: Deploy Zookeeper operator helm chart
+      kubernetes.core.helm:
+        name: zookeeper-operator
+        chart_ref: stackable-stable/zookeeper-operator
+        chart_version: "{{ stackable_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Deploy HDFS operator helm chart
+      kubernetes.core.helm:
+        name: hdfs-operator
+        chart_ref: stackable-stable/hdfs-operator
+        chart_version: "{{ stackable_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Deploy Commons operator helm chart
+      kubernetes.core.helm:
+        name: commons-operator
+        chart_ref: stackable-stable/commons-operator
+        chart_version: "{{ stackable_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Deploy Secret operator helm chart
+      kubernetes.core.helm:
+        name: secret-operator
+        chart_ref: stackable-stable/secret-operator
+        chart_version: "{{ stackable_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+    - name: Deploy Listener operator helm chart
+      kubernetes.core.helm:
+        name: listener-operator
+        chart_ref: stackable-stable/listener-operator
+        chart_version: "{{ stackable_operator_version }}"
+        release_namespace: "{{ k8s_namespace }}"
+        atomic: true
+        wait: true
+
+- name: Template HDFS cluster charts
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Create a temporary directory for templating
+      ansible.builtin.file:
+        path: /tmp/charts
+        state: directory
+        mode: '0755'
+
+    - name: Template the Zookeeper cluster file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-cluster.yaml"
+        dest: /tmp/charts/zookeeper-cluster.yaml
+
+    - name: Template the Zookeeper ZNode file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-znode.yaml"
+        dest: /tmp/charts/zookeeper-znode.yaml
+
+    - name: Template the HDFS cluster file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/hdfs-cluster.yaml"
+        dest: /tmp/charts/hdfs-cluster.yaml
+
+- name: Deploy HDFS cluster charts
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Deploy Zookeeper chart
+      kubernetes.core.k8s:
+        name: zookeeper
+        src: /tmp/charts/zookeeper-cluster.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: present
+        wait: true
+
+    - name: Deploy Zookeeper ZNode chart
+      kubernetes.core.k8s:
+        name: zookeeper-znode
+        src: /tmp/charts/zookeeper-znode.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: present
+        wait: true
+
+    - name: Deploy HDFS chart
+      kubernetes.core.k8s:
+        name: hdfs
+        src: /tmp/charts/hdfs-cluster.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: present
+        wait: true

@@ -6,3 +6,4 @@
 - Ansible "present" state desired when installing dependencies
 - Ansible action should be atomic if possible
 - for simplicity, we assume all nodes require Java for Spark or HDFS
+- k8s cluster setup with kubespray

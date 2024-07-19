@@ -30,7 +30,7 @@ gcloud compute instances create controller-${i} \
 --private-network-ip 10.240.0.1${i} \
 --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
 --subnet kubernetes-subnet \
---tags kubespray-cluster,controller \
+--tags kubernetes-the-kubespray-way,controller \
 --zone europe-west10-c
 done
 
@@ -43,7 +43,7 @@ gcloud compute instances create worker-${i} \
 --private-network-ip 10.240.0.2${i} \
 --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
 --subnet kubernetes-subnet \
---tags kubespray-cluster,worker \
+--tags kubernetes-the-kubespray-way,worker \
 --zone europe-west10-c
 done
 
