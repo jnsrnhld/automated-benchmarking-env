@@ -11,8 +11,14 @@ Then follow EXACTLY! the steps described [here](https://github.com/kubernetes-si
 Further, adjust the following `group_vars` in the corresponding inventory you created:
 - Set a `kube_version`, e.g. to `v1.27.5`
 - Set `kubeconfig_localhost` to `true`
-- Add public IP addresses to `supplementary_addresses_in_ssl_keys` 
+- Add at least 1 public IP address of your machines `supplementary_addresses_in_ssl_keys`: See
+[this section](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/getting_started/setting-up-your-first-cluster.md#set-up-kubespray)
+to understand how to access the cluster from your local machine.
 - Set `metrics_server_enabled` to true
+- Set `local_volume_provisioner_enabled` to true
+
+Command to set `KUBECONFIG` temporarily: `export KUBECONFIG=/$PWD/inventory/mycluster/artifacts/admin.conf`.
+You have to adjust the IP to one of the public IP addresses you passed to `supplementary_addresses_in_ssl_keys`.
 
 ###### Start/Reset the cluster
 

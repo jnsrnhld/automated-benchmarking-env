@@ -11,10 +11,13 @@ spark_version: "3.5.0"
 
 # k8s
 k8s_namespace: "default"
+persistent_volume_per_node: "100Gi"
 
 # hdfs
 hdfs_cluster_name: "hdfs-cluster"
 zookeeper_replicas: 1
-name_node_replicas: 2
+name_node_replicas: 2 # < 2 nodes require disabling shared edits dir in ansible/charts/hdfs-cluster.yaml
 data_node_replicas: 4
 journal_node_replicas: 1
+hdfs_datanode_capacity: "75Gi"
+hdfs_storage_class: "local-storage"

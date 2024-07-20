@@ -1,31 +1,37 @@
 ---
 - name: Template the test Spark
-  host: localhost
+  hosts: leader
   vars_files:
     - ../vars.yaml
+  become: yes
+  become_user: root
   tasks:
     - name: Create a temporary directory for templating
-      ansible.builtin.file:
-        path: "tmp/charts"
+      file:
+        path: "/tmp/charts"
         state: directory
         mode: '0755'
 
     - name: Template the Zookeeper cluster file
       template:
-        src: ansible/charts/spark-pi.yaml
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/spark-pi.yaml"
         dest: /tmp/charts/spark-pi.yaml
 
 - name: Deploy a test Spark application to the k8s cluster
   hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
   tasks:
     - name: Deploy spark-pi application
-      kubernetes.core.helm:
+      kubernetes.core.k8s:
         name: spark-pi
-        chart_ref: /tmp/charts/spark-pi.yaml
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
+        src: /tmp/charts/spark-pi.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: present
         wait: true
 
+# TODO does not work
     - name: Check for SparkApplicationTerminated event
       kubernetes.core.k8s_info:
         api_version: v1
@@ -42,13 +48,24 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
+  become: yes
+  become_user: root
   tasks:
+    - name: Copy webhdfs.yaml to leader
+      copy:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        dest: /tmp/charts/webhdfs.yaml
+        owner: foo
+        group: foo
+        mode: '0644'
+        backup: yes
+
     - name: Deploy WebHDFS application
-      kubernetes.core.helm:
+      kubernetes.core.k8s:
         name: webhdfs
-        chart_ref: ansible/charts/webhdfs.yaml
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
+        src:  "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        namespace: "{{ k8s_namespace }}"
+        state: present
         wait: true
 
     - name: Verify cluster is empty

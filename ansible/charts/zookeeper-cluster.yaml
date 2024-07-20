@@ -10,3 +10,8 @@ spec:
     roleGroups:
       default:
         replicas: {{ zookeeper_replicas }}
+        config:
+          resources:
+            storage:
+              data:
+                storageClass: {{ hdfs_storage_class }}

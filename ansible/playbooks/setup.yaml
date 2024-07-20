@@ -4,7 +4,6 @@
   become: true
   become_user: root
   tasks:
-    # TODO also install python≥
     - name: Check if pip is installed
       command: python3 -m pip -V
       register: pip_installed
@@ -28,49 +27,6 @@
           - pyyaml
           - kubernetes
       when: pip_installed.failed
-
-# for simplicity, we assume all nodes require Java for Spark or HDFS
-- name: Install JDK on all nodes (for Spark and HDFS)
-  hosts: remote
-  vars_files:
-    - ../vars.yaml
-  become: yes
-  tasks:
-    - name: Check if JDK is installed
-      command: "/opt/java/jdk-{{ java_version }}/bin/java --version"
-      register: java_installed
-      ignore_errors: true
-
-    - name: Download Java archive
-      ansible.builtin.get_url:
-        url: "https://download.oracle.com/java/{{ java_version }}/latest/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
-        dest: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
-        mode: '0644'
-      when: java_installed.failed
-
-    - name: Create directory for Java installation
-      ansible.builtin.file:
-        path: "/opt/java/jdk-{{ java_version }}"
-        state: directory
-        mode: '0755'
-      when: java_installed.failed
-
-    - name: Install JDK
-      ansible.builtin.unarchive:
-        src: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
-        dest: /opt/java/jdk-{{ java_version }}
-        remote_src: yes
-        extra_opts: ['--strip-components=1']
-      when: java_installed.failed
-
-    - name: Create profile script for JAVA_HOME and PATH
-      ansible.builtin.copy:
-        dest: /etc/profile.d/jdk.sh
-        content: |
-          export JAVA_HOME="/opt/java/jdk-{{ java_version }}"
-          export PATH=$JAVA_HOME/bin:$PATH
-        mode: '0755'
-      when: java_installed.failed
 
 - name: Check kubectl is present on leader node
   hosts: leader
@@ -212,6 +168,55 @@
         release_namespace: "{{ k8s_namespace }}"
         atomic: true
         wait: true
+
+- name: Create bind-mount directories for PersistentVolumes on all nodes
+  hosts: remote
+  become: yes
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Create Zookeeper data source directory if it does not exist
+      ansible.builtin.file:
+        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create HDFS data source directory if it does not exist
+      ansible.builtin.file:
+        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+    - name: Create Zookeeper data target directory if it does not exist
+      ansible.builtin.file:
+        path: "/zookeeper-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create HDFS data target directory if it does not exist
+      ansible.builtin.file:
+        path: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+    - name: Bind mount zookeeper the directories
+      ansible.posix.mount:
+        src: "/zookeeper-data-{{ ansible_hostname | lower }}"
+        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
+        fstype: none
+        opts: bind
+        state: mounted
+
+    - name: Bind mount hdfs the directories
+      ansible.posix.mount:
+        src: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        fstype: none
+        opts: bind
+        state: mounted
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
 - name: Template HDFS cluster charts
   hosts: leader

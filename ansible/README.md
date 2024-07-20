@@ -18,6 +18,16 @@ scaling services, database, etc.
 - `worker` are all machines that will be part of the hdfs cluster and/or contribute as workers to the batch processing 
 framework
 
+##### HDFS setup
+HDFS is operated by a [stackable operator](https://docs.stackable.tech/home/stable/hdfs/). It will create multiple 
+persistent volume claims, therefore it expects a mapping to some storage class. If you create the k8s cluster as 
+described here [k8s setup](k8s_setup/README.md), everything will be auto-wired. 
+Per default, the [Local Persistence Volume Static Provisioner](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner)
+will be used.
+
+Otherwise, you need to adjust the `hdfs_storage_class` variable [here](vars.yaml). Set it to the name of the storage 
+class the can provision storage for HDFS.
+
 ##### Run playbooks from root dir 
 
 ```shell
