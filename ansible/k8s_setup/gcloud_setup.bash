@@ -26,7 +26,7 @@ for i in 0 1; do # adjust amount of control planes if necessary
 gcloud compute instances create controller-${i} \
 --can-ip-forward \
 --create-disk=auto-delete=yes,boot=yes,device-name=instance-20240718-210829,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240701,mode=rw,size=125,type=projects/fog-computing-427208/zones/us-central1-f/diskTypes/pd-balanced \
---machine-type e2-standard-2 \
+--machine-type e2-highcpu-4 \
 --private-network-ip 10.240.0.1${i} \
 --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
 --subnet kubernetes-subnet \

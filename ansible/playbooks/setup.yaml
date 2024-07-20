@@ -273,3 +273,7 @@
         namespace: "{{ k8s_namespace }}"
         state: present
         wait: true
+
+    - name: Print info message
+      ansible.builtin.debug:
+        msg: HDFS will need some time to set the all nodes up. You may want to watch the cluster and check if all pods are up.

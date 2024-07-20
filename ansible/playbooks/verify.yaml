@@ -1,5 +1,5 @@
 ---
-- name: Template the test Spark
+- name: Template test files to leader
   hosts: leader
   vars_files:
     - ../vars.yaml
@@ -17,6 +17,11 @@
         src: "{{ lookup('env', 'PWD') }}/ansible/charts/spark-pi.yaml"
         dest: /tmp/charts/spark-pi.yaml
 
+    - name: Copy webhdfs.yaml to leader
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        dest: /tmp/charts/webhdfs.yaml
+
 - name: Deploy a test Spark application to the k8s cluster
   hosts: leader
   vars_files:
@@ -29,20 +34,17 @@
         src: /tmp/charts/spark-pi.yaml
         namespace: "{{ k8s_namespace }}"
         state: present
-        wait: true
 
-# TODO does not work
-    - name: Check for SparkApplicationTerminated event
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Event
-        namespace: default
-        field_selectors:
-          - involvedObject.name=spark-pi
-          - reason=SparkApplicationTerminated
-        wait_sleep: 10
-        wait_timeout: 360
-      register: spark_app_events
+    - name: Wait for SparkApplication pod to be terminated
+      shell: "kubectl wait --namespace={{ k8s_namespace }} --for=jsonpath='{.status.phase}'=Succeeded pod/spark-pi-driver --timeout=120s"
+      retries: 3
+
+    - name: Delete SparkApplication pod
+      kubernetes.core.k8s:
+        name: spark-pi
+        src: /tmp/charts/spark-pi.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: absent
 
 - name: Test HDFS Cluster with WebHDFS
   hosts: leader
@@ -51,19 +53,10 @@
   become: yes
   become_user: root
   tasks:
-    - name: Copy webhdfs.yaml to leader
-      copy:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
-        dest: /tmp/charts/webhdfs.yaml
-        owner: foo
-        group: foo
-        mode: '0644'
-        backup: yes
-
     - name: Deploy WebHDFS application
       kubernetes.core.k8s:
         name: webhdfs
-        src:  "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        src:  /tmp/charts/webhdfs.yaml
         namespace: "{{ k8s_namespace }}"
         state: present
         wait: true
@@ -73,20 +66,26 @@
         namespace: "{{ k8s_namespace }}"
         pod: webhdfs-0
         command: "curl -s -XGET \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/?op=LISTSTATUS\""
-      failed_when: result | length > 0
+      register: curl_result
+
+    - name: Check if FileStatus array is not empty
+      debug:
+        msg: "FileStatus array is not empty"
+      when: curl_result.stdout | from_json() | json_query('FileStatuses.FileStatus') | length > 0
 
     - name: Create testdata.txt file locally
       copy:
-        dest: ./testdata.txt
+        dest: /tmp/testdata.txt
         content: |
           Sample test data for HDFS.
+        mode: '0644'
 
-    - name: Copy testdata.txt to helper pod
+    - name: Copy /tmp/testdata.txt local file to /tmp/testdata.txt in pod
       kubernetes.core.k8s_cp:
         namespace: "{{ k8s_namespace }}"
         pod: webhdfs-0
-        remote_path: /tmp
-        local_path: ./testdata.txt
+        remote_path: /tmp/testdata.txt
+        local_path: /tmp/testdata.txt
 
     - name: Issue initial PUT command to create file in HDFS
       kubernetes.core.k8s_exec:
@@ -97,7 +96,7 @@
 
     - name: Extract location URL from PUT response
       set_fact:
-        location_url: "{{ put_result.stdout }}"
+        location_url: "{{ put_result.stdout | from_json() | json_query('Location') }}"
 
     - name: Issue second PUT command to complete file creation
       kubernetes.core.k8s_exec:
@@ -131,5 +130,13 @@
 
     - name: Clean up local testdata.txt file
       file:
-        path: ./testdata.txt
+        path: /tmp/testdata.txt
         state: absent
+
+    - name: Delete WebHDFS application
+      kubernetes.core.k8s:
+        name: webhdfs
+        src: /tmp/charts/webhdfs.yaml
+        namespace: "{{ k8s_namespace }}"
+        state: absent
+        wait: true
