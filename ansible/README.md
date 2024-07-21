@@ -40,7 +40,8 @@ ansible-playbook ansible/playbooks.yaml -i ansible/local.yaml
 
 ###### Playbooks 
 
-| name   | content                                                                                               |
-|--------|-------------------------------------------------------------------------------------------------------|
-| setup  | Set's up the required software stack for the experiments.                                             |
-| verify | Verifies the setup did work properly by submitting a spark application and on/offloading date to HDFS |
+| name    | content                                                                                               |
+|---------|-------------------------------------------------------------------------------------------------------|
+| setup   | Set's up the required software stack for the experiments.                                             |
+| verify  | Verifies the setup did work properly by submitting a spark application and on/offloading date to HDFS |
+| cleanup | Reverts the changes to remote machines and k8s cluster made by the setup script as far as possbible.  |
