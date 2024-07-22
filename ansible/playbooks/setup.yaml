@@ -11,7 +11,7 @@
 
     - name: Download pip installer
       ansible.builtin.get_url:
-        url:  https://bootstrap.pypa.io/get-pip.py
+        url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/get-pip.py
         mode: '0644'
       when: pip_installed.failed
@@ -40,7 +40,7 @@
 
     - name: Fail playbook
       ansible.builtin.fail:
-        msg: kubectl not installed on leader node. Can't continue playbook without a present k8s deployment.
+        msg: kubectl not installed or not connected with a cluster on leader node. Can't continue playbook without a present k8s deployment.
       when: kubectl_installed.rc != 0
 
 - name: Install helm on leader node
@@ -73,6 +73,105 @@
       when: helm_installed.failed
       become: yes
 
+# to be on the save side and prevent any manual managing effort, we'll create more PV then actually required
+- name: Create bind-mount directories for PersistentVolumes on all nodes
+  hosts: remote
+  become: yes
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Create MongoDB directory
+      ansible.builtin.file:
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Create Zookeeper data source directory if it does not exist
+      ansible.builtin.file:
+        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create HDFS data source directory if it does not exist
+      ansible.builtin.file:
+        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+    - name: Create MongoDB target directory if it does not exist
+      ansible.builtin.file:
+        path: "/mongodb-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Create Zookeeper data target directory if it does not exist
+      ansible.builtin.file:
+        path: "/zookeeper-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create HDFS data target directory if it does not exist
+      ansible.builtin.file:
+        path: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+    - name: Bind mount MongoDB directories
+      ansible.posix.mount:
+        src: "/mongodb-data-{{ ansible_hostname | lower }}"
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        fstype: none
+        opts: bind
+        state: mounted
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Bind mount zookeeper directories
+      ansible.posix.mount:
+        src: "/zookeeper-data-{{ ansible_hostname | lower }}"
+        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
+        fstype: none
+        opts: bind
+        state: mounted
+
+    - name: Bind mount hdfs directories
+      ansible.posix.mount:
+        src: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        fstype: none
+        opts: bind
+        state: mounted
+      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+- name: Template HDFS cluster charts
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  tasks:
+    - name: Create a temporary directory for templating
+      ansible.builtin.file:
+        path: /tmp/charts
+        state: directory
+        mode: '0755'
+
+    - name: Template the Zookeeper cluster file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-cluster.yaml"
+        dest: /tmp/charts/zookeeper-cluster.yaml
+
+    - name: Template the Zookeeper ZNode file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-znode.yaml"
+        dest: /tmp/charts/zookeeper-znode.yaml
+
+    - name: Template the HDFS cluster file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/hdfs-cluster.yaml"
+        dest: /tmp/charts/hdfs-cluster.yaml
+
 - name: Deploy spark-operator helm chart
   hosts: leader
   vars_files:
@@ -93,25 +192,32 @@
         atomic: true
         wait: true
 
-- name: Deploy MongoDB operator helm chart
+- name: Deploy MongoDB replica set
   hosts: leader
   vars_files:
     - ../vars.yaml
   become: yes
   tasks:
-    - name: Add MongoDB repository
-      kubernetes.core.helm_repository:
-        name: mongodb
-        repo_url: https://mongodb.github.io/helm-charts
-
-    - name: Deploy MongoDB operator helm chart
+    - name: Deploy mongodb helm chart
       kubernetes.core.helm:
-        name: community-operator
-        chart_ref: mongodb/community-operator
-        chart_version: "{{ mongodb_version }}"
+        name: mongodb
+        chart_ref: oci://registry-1.docker.io/bitnamicharts/mongodb
+        chart_version: "{{ mongo_db_chart_version }}"
         release_namespace: "{{ k8s_namespace }}"
         atomic: true
         wait: true
+        values:
+          architecture: replicaset
+          persistence:
+            storageClass: "{{ storage_class }}"
+          replicaCount: "{{ replica_count }}"
+          auth:
+            usernames:
+              - "{{ mongodb_user }}"
+            passwords:
+              - "{{ mongodb_password }}"
+            databases:
+              - "{{ mongodb_db }}"
 
 - name: Install HDFS Operator's
   hosts: leader
@@ -168,81 +274,6 @@
         release_namespace: "{{ k8s_namespace }}"
         atomic: true
         wait: true
-
-- name: Create bind-mount directories for PersistentVolumes on all nodes
-  hosts: remote
-  become: yes
-  vars_files:
-    - ../vars.yaml
-  tasks:
-    - name: Create Zookeeper data source directory if it does not exist
-      ansible.builtin.file:
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-
-    - name: Create HDFS data source directory if it does not exist
-      ansible.builtin.file:
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-    - name: Create Zookeeper data target directory if it does not exist
-      ansible.builtin.file:
-        path: "/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-
-    - name: Create HDFS data target directory if it does not exist
-      ansible.builtin.file:
-        path: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-    - name: Bind mount zookeeper the directories
-      ansible.posix.mount:
-        src: "/zookeeper-data-{{ ansible_hostname | lower }}"
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        fstype: none
-        opts: bind
-        state: mounted
-
-    - name: Bind mount hdfs the directories
-      ansible.posix.mount:
-        src: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        fstype: none
-        opts: bind
-        state: mounted
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-- name: Template HDFS cluster charts
-  hosts: leader
-  vars_files:
-    - ../vars.yaml
-  tasks:
-    - name: Create a temporary directory for templating
-      ansible.builtin.file:
-        path: /tmp/charts
-        state: directory
-        mode: '0755'
-
-    - name: Template the Zookeeper cluster file
-      template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-cluster.yaml"
-        dest: /tmp/charts/zookeeper-cluster.yaml
-
-    - name: Template the Zookeeper ZNode file
-      template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-znode.yaml"
-        dest: /tmp/charts/zookeeper-znode.yaml
-
-    - name: Template the HDFS cluster file
-      template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/hdfs-cluster.yaml"
-        dest: /tmp/charts/hdfs-cluster.yaml
 
 - name: Deploy HDFS cluster charts
   hosts: leader

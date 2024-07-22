@@ -1,5 +1,5 @@
 ---
-- name: Revert HDFS cluster charts
+- name: Revert deployment of HDFS cluster charts
   hosts: leader
   vars_files:
     - ../vars.yaml
@@ -23,7 +23,7 @@
         namespace: "{{ k8s_namespace }}"
         state: absent
 
-- name: Revert spark-operator helm chart
+- name: Revert spark-operator deployment
   hosts: leader
   vars_files:
     - ../vars.yaml
@@ -40,24 +40,19 @@
         name: spark-operator
         state: absent
 
-- name: Revert MongoDB operator helm chart
+- name: Revert MongoDB deployment
   hosts: leader
   vars_files:
     - ../vars.yaml
   become: yes
   tasks:
-    - name: Remove MongoDB operator helm chart1
+    - name: Remove mongodb helm chart
       kubernetes.core.helm:
-        name: community-operator
+        name: mongodb
         state: absent
         release_namespace: "{{ k8s_namespace }}"
 
-    - name: Remove MongoDB repository
-      kubernetes.core.helm_repository:
-        name: mongodb
-        state: absent
-
-- name: Revert HDFS Operator's
+- name: Revert HDFS Operator deployments
   hosts: leader
   vars_files:
     - ../vars.yaml
@@ -104,15 +99,16 @@
   vars_files:
     - ../vars.yaml
   tasks:
+    - name: Unmount mongodb directories
+      ansible.posix.mount:
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        state: unmounted
+      loop: "{{ range(1, replica_count + 1) }}"
+
     - name: Unmount zookeeper directories
       ansible.posix.mount:
         path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
         state: unmounted
-
-    - name: Remove Zookeeper data source directory
-      ansible.builtin.file:
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: absent
 
     - name: Unmount hdfs directories
       ansible.posix.mount:
@@ -120,11 +116,28 @@
         state: unmounted
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
+    - name: Remove mongodb data source directory
+      ansible.builtin.file:
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        state: absent
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Remove Zookeeper data source directory
+      ansible.builtin.file:
+        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
+        state: absent
+
     - name: Remove HDFS data source directory
       ansible.builtin.file:
         path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
+
+    - name: Remove mongodb data target directory
+      ansible.builtin.file:
+        path: "/mongodb-data-{{ ansible_hostname | lower }}"
+        state: absent
+      loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Remove Zookeeper data target directory
       ansible.builtin.file:
@@ -137,7 +150,7 @@
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
-- name: Remove templated HDFS cluster charts
+- name: Remove temporary template dir
   hosts: leader
   vars_files:
     - ../vars.yaml

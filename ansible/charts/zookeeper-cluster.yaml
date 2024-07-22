@@ -14,4 +14,4 @@ spec:
           resources:
             storage:
               data:
-                storageClass: {{ hdfs_storage_class }}
+                storageClass: {{ storage_class }}

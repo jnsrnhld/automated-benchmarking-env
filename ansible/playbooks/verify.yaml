@@ -1,4 +1,23 @@
 ---
+- name: Check the status of the created MongoDB database
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  become_user: root
+  tasks:
+    - name: "Check {{ mongodb_db }} db status"
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: mongodb-0
+        command: "mongosh -u {{ mongodb_user }} -p \"{{ mongodb_password }}\" --authenticationDatabase {{ mongodb_db }} --eval \"db.stats().ok\""
+      register: db_status
+
+    - name: "Check if DB status of {{ mongodb_db }} is 'ok'"
+      debug:
+        msg: "DB status not OK {{ db_status.stdout }}"
+      failed_when: db_status.stdout | int != 1
+
 - name: Template test files to leader
   hosts: leader
   vars_files:

@@ -19,7 +19,7 @@ spec:
           resources:
             storage:
               data:
-                storageClass: {{ hdfs_storage_class }}
+                storageClass: {{ storage_class }}
   dataNodes:
     config:
       listenerClass: external-unstable
@@ -33,7 +33,7 @@ spec:
               data:
                 count: 1
                 capacity: {{ hdfs_datanode_capacity }}
-                storageClass: {{ hdfs_storage_class }}
+                storageClass: {{ storage_class }}
   journalNodes:
     roleGroups:
       default:
@@ -43,4 +43,4 @@ spec:
           resources:
             storage:
               data:
-                storageClass: {{ hdfs_storage_class }}
+                storageClass: {{ storage_class }}
