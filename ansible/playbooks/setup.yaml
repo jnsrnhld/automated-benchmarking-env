@@ -1,20 +1,20 @@
 ---
 - name: Add a new user with sudo privileges
-  hosts: all
+  hosts: remote
+  vars_files:
+    - ../vars.yaml
   become: true
   tasks:
     - name: Create a new user
       ansible.builtin.user:
-        name: "{{ mtuser }}"
-        password: "{{ 'password' | password_hash('sha512') }}"
+        name: "{{ linux_username }}"
+        password: "{{ linux_password | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
-      vars:
-        ansible_become_pass: "{{ become_pass }}"
 
     - name: Add new user to sudo group
       ansible.builtin.user:
-        name: "{{ mtuser }}"
+        name: "{{ linux_username }}"
         groups: sudo
         append: yes
         state: present
@@ -23,13 +23,12 @@
       ansible.builtin.lineinfile:
         path: /etc/sudoers
         state: present
-        regexp: "^%{{ mtuser }}"
-        line: "{{ mtuser }} ALL=(ALL) NOPASSWD:ALL"
+        regexp: "^%{{ linux_username }}"
+        line: "{{ linux_username }} ALL=(ALL) NOPASSWD:ALL"
 
 - name: Install Ansible/pip dependencies on leader machine
   hosts: leader
   become: true
-  become_user: "{{ mtuser }}"
   tasks:
     - name: Check if pip is installed
       command: python3 -m pip -V
@@ -57,8 +56,9 @@
 
 - name: Check kubectl is present on leader node
   hosts: leader
+  vars_files:
+    - ../vars.yaml
   become: yes
-  become_user: "{{ mtuser }}"
   tasks:
     - name: Check if kubectl is installed and connected to cluster
       command: kubectl cluster-info
@@ -69,6 +69,23 @@
       ansible.builtin.fail:
         msg: kubectl not installed or not connected with a cluster on leader node. Can't continue playbook without a present k8s deployment.
       when: kubectl_installed.rc != 0
+
+    - name: Ensure .kube directory exists for user {{ linux_username }}
+      ansible.builtin.file:
+        path: /home/{{ linux_username }}/.kube
+        state: directory
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        mode: '0755'
+
+    - name: Copy kubeconfig to {{ linux_username }}'s home directory
+      ansible.builtin.copy:
+        remote_src: true
+        src: /etc/kubernetes/admin.conf
+        dest: /home/{{ linux_username }}/.kube/config
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        mode: '0644'
 
 - name: Install helm on leader node
   hosts: leader

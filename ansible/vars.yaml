@@ -8,9 +8,9 @@ zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
 spark_version: "3.5.0"
 
-# linux
-username: "mtuser"
-password: "Admin1!"
+# this user will be used for ansible script and experiment execution
+linux_username: "root"
+linux_password: "Admin1!"
 
 # k8s
 k8s_namespace: "default"
@@ -27,7 +27,7 @@ mongodb_password: "Password1!"
 hdfs_cluster_name: "hdfs-cluster"
 zookeeper_replicas: 1
 replication_factor: 3 # should be <= data_node_replicas
-data_node_replicas: 4
+data_node_replicas: 3
 name_node_replicas: 2 # < 2 nodes require disabling shared_edits_dir in ansible/charts/hdfs-cluster.yaml
 journal_node_replicas: 1
 hdfs_datanode_capacity: "75Gi"

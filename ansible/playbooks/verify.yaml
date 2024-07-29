@@ -4,7 +4,6 @@
   vars_files:
     - ../vars.yaml
   become: yes
-  become_user: "{{ mtuser }}"
   tasks:
     - name: "Check {{ mongodb_database }} db status"
       kubernetes.core.k8s_exec:
@@ -15,7 +14,7 @@
 
     - name: "Check if DB status of {{ mongodb_database }} is 'ok'"
       debug:
-        msg: "DB status not OK {{ db_status.stdout }}"
+        msg: "DB status OK: {{ db_status.stdout }}"
       failed_when: db_status.stdout | int != 1
 
 - name: Template test files to leader
@@ -23,7 +22,6 @@
   vars_files:
     - ../vars.yaml
   become: yes
-  become_user: "{{ mtuser }}"
   tasks:
     - name: Create a temporary directory for templating
       file:
@@ -70,7 +68,6 @@
   vars_files:
     - ../vars.yaml
   become: yes
-  become_user: "{{ mtuser }}"
   tasks:
     - name: Deploy WebHDFS application
       kubernetes.core.k8s:
