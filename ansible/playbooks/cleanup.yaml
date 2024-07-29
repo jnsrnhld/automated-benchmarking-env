@@ -4,6 +4,7 @@
   vars_files:
     - ../vars.yaml
   become: yes
+  ignore_errors: true
   tasks:
     - name: Remove Zookeeper chart
       kubernetes.core.k8s:
@@ -19,7 +20,7 @@
 
     - name: Remove HDFS chart
       kubernetes.core.k8s:
-        name: "{{ hdfs_clustername }}"
+        name: "{{ hdfs_cluster_name }}"
         namespace: "{{ k8s_namespace }}"
         state: absent
 

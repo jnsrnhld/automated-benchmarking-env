@@ -8,7 +8,7 @@ spec:
     productVersion: {{ hdfs_version }}
   clusterConfig:
     zookeeperConfigMapName: hdfs-znode
-    dfsReplication: 1
+    dfsReplication: {{ replication_factor }}
   nameNodes:
     config:
       listenerClass: external-stable

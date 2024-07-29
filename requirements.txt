@@ -1,4 +1,4 @@
-ansible==10.2.0
-kubernetes
-PyYAML
-openshift
+ansible==9.5.1
+kubernetes==30.1.0
+PyYAML==6.0.1
+openshift==0.13.2

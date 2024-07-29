@@ -150,6 +150,9 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
+  vars:
+    local_charts_dir: "{{ lookup('env', 'PWD') }}/ansible/charts/"
+    remote_charts_dir: /tmp/charts
   tasks:
     - name: Create a temporary directory for templating
       ansible.builtin.file:
@@ -159,18 +162,18 @@
 
     - name: Template the Zookeeper cluster file
       template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-cluster.yaml"
-        dest: /tmp/charts/zookeeper-cluster.yaml
+        src: "{{ local_charts_dir }}/zookeeper-cluster.yaml"
+        dest: "{{ remote_charts_dir }}/zookeeper-cluster.yaml"
 
     - name: Template the Zookeeper ZNode file
       template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/zookeeper-znode.yaml"
-        dest: /tmp/charts/zookeeper-znode.yaml
+        src: "{{ local_charts_dir }}/zookeeper-znode.yaml"
+        dest: "{{ remote_charts_dir }}/zookeeper-znode.yaml"
 
     - name: Template the HDFS cluster file
       template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/hdfs-cluster.yaml"
-        dest: /tmp/charts/hdfs-cluster.yaml
+        src: "{{ local_charts_dir }}/hdfs-cluster.yaml"
+        dest: "{{ remote_charts_dir }}/hdfs-cluster.yaml"
 
 - name: Deploy spark-operator helm chart
   hosts: leader
@@ -279,12 +282,14 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
+  vars:
+    remote_charts_dir: /tmp/charts
   become: yes
   tasks:
     - name: Deploy Zookeeper chart
       kubernetes.core.k8s:
         name: zookeeper
-        src: /tmp/charts/zookeeper-cluster.yaml
+        src: "{{ remote_charts_dir }}/zookeeper-cluster.yaml"
         namespace: "{{ k8s_namespace }}"
         state: present
         wait: true
@@ -292,7 +297,7 @@
     - name: Deploy Zookeeper ZNode chart
       kubernetes.core.k8s:
         name: zookeeper-znode
-        src: /tmp/charts/zookeeper-znode.yaml
+        src: "{{ remote_charts_dir }}/zookeeper-znode.yaml"
         namespace: "{{ k8s_namespace }}"
         state: present
         wait: true
@@ -300,7 +305,7 @@
     - name: Deploy HDFS chart
       kubernetes.core.k8s:
         name: hdfs
-        src: /tmp/charts/hdfs-cluster.yaml
+        src: "{{ remote_charts_dir }}/hdfs-cluster.yaml"
         namespace: "{{ k8s_namespace }}"
         state: present
         wait: true
