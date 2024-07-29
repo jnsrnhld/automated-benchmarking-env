@@ -1,8 +1,35 @@
 ---
+- name: Add a new user with sudo privileges
+  hosts: all
+  become: true
+  tasks:
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ mtuser }}"
+        password: "{{ 'password' | password_hash('sha512') }}"
+        shell: /bin/bash
+        state: present
+      vars:
+        ansible_become_pass: "{{ become_pass }}"
+
+    - name: Add new user to sudo group
+      ansible.builtin.user:
+        name: "{{ mtuser }}"
+        groups: sudo
+        append: yes
+        state: present
+
+    - name: Allow passwordless sudo for the new user
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: "^%{{ mtuser }}"
+        line: "{{ mtuser }} ALL=(ALL) NOPASSWD:ALL"
+
 - name: Install Ansible/pip dependencies on leader machine
   hosts: leader
   become: true
-  become_user: root
+  become_user: "{{ mtuser }}"
   tasks:
     - name: Check if pip is installed
       command: python3 -m pip -V
@@ -31,7 +58,7 @@
 - name: Check kubectl is present on leader node
   hosts: leader
   become: yes
-  become_user: root
+  become_user: "{{ mtuser }}"
   tasks:
     - name: Check if kubectl is installed and connected to cluster
       command: kubectl cluster-info
@@ -216,11 +243,11 @@
           replicaCount: "{{ replica_count }}"
           auth:
             usernames:
-              - "{{ mongodb_user }}"
+              - "{{ mongodb_username }}"
             passwords:
               - "{{ mongodb_password }}"
             databases:
-              - "{{ mongodb_db }}"
+              - "{{ mongodb_database }}"
 
 - name: Install HDFS Operator's
   hosts: leader

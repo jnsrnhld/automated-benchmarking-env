@@ -8,6 +8,10 @@ zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
 spark_version: "3.5.0"
 
+# linux
+username: "mtuser"
+password: "Admin1!"
+
 # k8s
 k8s_namespace: "default"
 persistent_volume_per_node: "100Gi"
@@ -15,8 +19,8 @@ storage_class: "local-storage"
 
 # mongodb
 replica_count: 2
-mongodb_db: "test"
-mongodb_user: "test"
+mongodb_database: "test"
+mongodb_username: "test"
 mongodb_password: "Password1!"
 
 # hdfs
