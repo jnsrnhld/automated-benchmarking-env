@@ -17,6 +17,8 @@ spec:
         replicas: {{ name_node_replicas }}
         config:
           resources:
+            cpu:
+              max: {{ hdfs_namenode_cpu_limit }}
             storage:
               data:
                 storageClass: {{ storage_class }}
@@ -29,6 +31,8 @@ spec:
         config:
           listenerClass: external-unstable
           resources:
+            cpu:
+              max: {{ hdfs_datanode_cpu_limit }}
             storage:
               data:
                 count: 1
@@ -41,6 +45,8 @@ spec:
         config:
           listenerClass: external-stable
           resources:
+            cpu:
+              max: {{ hdfs_journalnode_cpu_limit }}
             storage:
               data:
                 storageClass: {{ storage_class }}

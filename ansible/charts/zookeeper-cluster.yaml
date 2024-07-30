@@ -12,6 +12,8 @@ spec:
         replicas: {{ zookeeper_replicas }}
         config:
           resources:
+            cpu:
+              max: {{ zookeeper_cpu_limit }}
             storage:
               data:
                 storageClass: {{ storage_class }}

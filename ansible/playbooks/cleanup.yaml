@@ -3,24 +3,32 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
+  vars:
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
   become: yes
   ignore_errors: true
   tasks:
     - name: Remove Zookeeper chart
       kubernetes.core.k8s:
         name: zookeeper
+        api_version: zookeeper.stackable.tech/v1alpha1
+        kind: ZookeeperCluster
         namespace: "{{ k8s_namespace }}"
         state: absent
 
     - name: Remove Zookeeper ZNode chart
       kubernetes.core.k8s:
         name: hdfs-znode
+        api_version: zookeeper.stackable.tech/v1alpha1
+        kind: ZookeeperZnode
         namespace: "{{ k8s_namespace }}"
         state: absent
 
     - name: Remove HDFS chart
       kubernetes.core.k8s:
         name: "{{ hdfs_cluster_name }}"
+        api_version: hdfs.stackable.tech/v1alpha1
+        kind: HdfsCluster
         namespace: "{{ k8s_namespace }}"
         state: absent
 
@@ -118,45 +126,72 @@
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
     - name: Remove mongodb data source directory
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
         state: absent
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Remove Zookeeper data source directory
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
         state: absent
 
     - name: Remove HDFS data source directory
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
     - name: Remove mongodb data target directory
-      ansible.builtin.file:
-        path: "/mongodb-data-{{ ansible_hostname | lower }}"
+      file:
+        path: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
         state: absent
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Remove Zookeeper data target directory
-      ansible.builtin.file:
-        path: "/zookeeper-data-{{ ansible_hostname | lower }}"
+      file:
+        path: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
         state: absent
 
     - name: Remove HDFS data target directory
-      ansible.builtin.file:
-        path: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+      file:
+        path: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
-- name: Remove temporary template dir
+- name: Remove users dir
   hosts: leader
   vars_files:
     - ../vars.yaml
+  become: true
   tasks:
-    - name: Remove temporary directory for templating
-      ansible.builtin.file:
-        path: /tmp/charts
+    - name: Remove users dir
+      file:
+        path: /Users/{{ linux_username }}
         state: absent
+
+- name: Revert user creation
+  hosts: remote
+  vars_files:
+    - ../vars.yaml
+  become: true
+  become_user: root
+  tasks:
+    - name: Remove new user from sudo group
+      user:
+        name: "{{ linux_username }}"
+        groups: sudo
+        append: no
+        state: present
+
+    - name: Remove passwordless sudo for the new user
+      lineinfile:
+        path: /etc/sudoers
+        state: absent
+        regexp: "^%{{ linux_username }}"
+
+    - name: Delete the user
+      user:
+        name: "{{ linux_username }}"
+        state: absent
+        remove: yes

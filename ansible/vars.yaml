@@ -8,26 +8,33 @@ zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
 spark_version: "3.5.0"
 
-# this user will be used for ansible script and experiment execution
-linux_username: "root"
+# this user can be used for ansible scripts and experiment execution
+linux_username: "mtuser"
 linux_password: "Admin1!"
+venv_path: "/Users/{{ linux_username }}/venv"
 
 # k8s
 k8s_namespace: "default"
-persistent_volume_per_node: "100Gi"
+persistent_volume_per_node: "45Gi"
 storage_class: "local-storage"
 
 # mongodb
-replica_count: 2
+replica_count: 1
 mongodb_database: "test"
 mongodb_username: "test"
 mongodb_password: "Password1!"
+mongodb_resource_preset: "nano"
 
 # hdfs
 hdfs_cluster_name: "hdfs-cluster"
-zookeeper_replicas: 1
-replication_factor: 3 # should be <= data_node_replicas
-data_node_replicas: 3
+replication_factor: 1 # should be <= data_node_replicas
+data_node_replicas: 1
 name_node_replicas: 2 # < 2 nodes require disabling shared_edits_dir in ansible/charts/hdfs-cluster.yaml
 journal_node_replicas: 1
-hdfs_datanode_capacity: "75Gi"
+zookeeper_replicas: 1
+# hdfs resources
+hdfs_datanode_capacity: "45Gi"
+zookeeper_cpu_limit: "200m" # recommended is 800m
+hdfs_datanode_cpu_limit: "100m" # recommended is 400m
+hdfs_namenode_cpu_limit: "250m" # recommended is 1000m
+hdfs_journalnode_cpu_limit: "100m" # recommended is 400m

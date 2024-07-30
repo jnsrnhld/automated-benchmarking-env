@@ -6,28 +6,28 @@
   become: true
   tasks:
     - name: Create a new user
-      ansible.builtin.user:
+      user:
         name: "{{ linux_username }}"
         password: "{{ linux_password | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
-
-    - name: Add new user to sudo group
-      ansible.builtin.user:
-        name: "{{ linux_username }}"
-        groups: sudo
+        create_home: yes
+        groups:
+          - sudo
         append: yes
-        state: present
 
-    - name: Allow passwordless sudo for the new user
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
+    - name: Allow new user to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
         state: present
-        regexp: "^%{{ linux_username }}"
-        line: "{{ linux_username }} ALL=(ALL) NOPASSWD:ALL"
+        regexp: '^%{{ linux_username }}'
+        line: '%{{ linux_username }} ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
 
 - name: Install Ansible/pip dependencies on leader machine
   hosts: leader
+  vars_files:
+    - ../vars.yaml
   become: true
   tasks:
     - name: Check if pip is installed
@@ -36,7 +36,7 @@
       ignore_errors: true
 
     - name: Download pip installer
-      ansible.builtin.get_url:
+      get_url:
         url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/get-pip.py
         mode: '0644'
@@ -46,13 +46,32 @@
       command: python3 /tmp/get-pip.py --user
       when: pip_installed.failed
 
+    - name: Ensure python3-venv is installed
+      apt:
+        name: python3-venv
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install packaging package
+      pip:
+        name:
+          - packaging
+          - virtualenv
+
+    - name: Create virtual environment
+      become_user: root
+      command:
+        cmd: python3 -m venv {{ venv_path }}
+        creates: "{{ venv_path }}"
+
     - name: Install pre-requisites
       pip:
         name:
           - openshift
           - pyyaml
           - kubernetes
-      when: pip_installed.failed
+        virtualenv: "{{ venv_path }}"
+        virtualenv_site_packages: true
 
 - name: Check kubectl is present on leader node
   hosts: leader
@@ -66,12 +85,12 @@
       ignore_errors: true
 
     - name: Fail playbook
-      ansible.builtin.fail:
+      fail:
         msg: kubectl not installed or not connected with a cluster on leader node. Can't continue playbook without a present k8s deployment.
       when: kubectl_installed.rc != 0
 
     - name: Ensure .kube directory exists for user {{ linux_username }}
-      ansible.builtin.file:
+      file:
         path: /home/{{ linux_username }}/.kube
         state: directory
         owner: "{{ linux_username }}"
@@ -79,7 +98,7 @@
         mode: '0755'
 
     - name: Copy kubeconfig to {{ linux_username }}'s home directory
-      ansible.builtin.copy:
+      copy:
         remote_src: true
         src: /etc/kubernetes/admin.conf
         dest: /home/{{ linux_username }}/.kube/config
@@ -98,7 +117,7 @@
       ignore_errors: true
 
     - name: Download Helm installation script
-      ansible.builtin.get_url:
+      get_url:
         url: https://raw.githubusercontent.com/helm/helm/master/scripts/get
         dest: /tmp/get_helm.sh
         mode: '0755'
@@ -106,12 +125,12 @@
       become: yes
 
     - name: Install Helm
-      ansible.builtin.command: /tmp/get_helm.sh -v "v{{ helm_version }}"
+      command: /tmp/get_helm.sh -v "v{{ helm_version }}"
       when: helm_installed.failed
       become: yes
 
     - name: Remove Helm installation script
-      ansible.builtin.file:
+      file:
         path: /tmp/get_helm.sh
         state: absent
       when: helm_installed.failed
@@ -125,48 +144,48 @@
     - ../vars.yaml
   tasks:
     - name: Create MongoDB directory
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Create Zookeeper data source directory if it does not exist
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
 
     - name: Create HDFS data source directory if it does not exist
-      ansible.builtin.file:
+      file:
         path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
     - name: Create MongoDB target directory if it does not exist
-      ansible.builtin.file:
-        path: "/mongodb-data-{{ ansible_hostname | lower }}"
+      file:
+        path: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Create Zookeeper data target directory if it does not exist
-      ansible.builtin.file:
-        path: "/zookeeper-data-{{ ansible_hostname | lower }}"
+      file:
+        path: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
 
     - name: Create HDFS data target directory if it does not exist
-      ansible.builtin.file:
-        path: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+      file:
+        path: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
     - name: Bind mount MongoDB directories
       ansible.posix.mount:
-        src: "/mongodb-data-{{ ansible_hostname | lower }}"
+        src: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
         path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
         fstype: none
         opts: bind
@@ -175,7 +194,7 @@
 
     - name: Bind mount zookeeper directories
       ansible.posix.mount:
-        src: "/zookeeper-data-{{ ansible_hostname | lower }}"
+        src: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
         path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
         fstype: none
         opts: bind
@@ -183,7 +202,7 @@
 
     - name: Bind mount hdfs directories
       ansible.posix.mount:
-        src: "/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        src: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         fstype: none
         opts: bind
@@ -196,11 +215,12 @@
     - ../vars.yaml
   vars:
     local_charts_dir: "{{ lookup('env', 'PWD') }}/ansible/charts/"
-    remote_charts_dir: /tmp/charts
+    remote_charts_dir: /Users/{{ linux_username }}/tmp/charts
+  become: true
   tasks:
     - name: Create a temporary directory for templating
-      ansible.builtin.file:
-        path: /tmp/charts
+      file:
+        path: "{{ remote_charts_dir }}"
         state: directory
         mode: '0755'
 
@@ -265,12 +285,18 @@
               - "{{ mongodb_password }}"
             databases:
               - "{{ mongodb_database }}"
+          resourcesPreset: "{{ mongodb_resource_preset }}"
+          arbiter:
+            resourcesPreset: "{{ mongodb_resource_preset }}"
 
 - name: Install HDFS Operator's
   hosts: leader
   vars_files:
     - ../vars.yaml
+  vars:
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
   become: yes
+  become_user: root
   tasks:
     - name: Add stackable-stable repository
       kubernetes.core.helm_repository:
@@ -327,7 +353,8 @@
   vars_files:
     - ../vars.yaml
   vars:
-    remote_charts_dir: /tmp/charts
+    remote_charts_dir: /Users/{{ linux_username }}/tmp/charts
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
   become: yes
   tasks:
     - name: Deploy Zookeeper chart
@@ -355,5 +382,5 @@
         wait: true
 
     - name: Print info message
-      ansible.builtin.debug:
+      debug:
         msg: HDFS will need some time to set the all nodes up. You may want to watch the cluster and check if all pods are up.
