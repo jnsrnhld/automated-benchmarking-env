@@ -24,7 +24,7 @@
   vars_files:
     - ../vars.yaml
   vars:
-    template_dir: "/User/{{ linux_username }}/tmp/charts"
+    template_dir: "/Users/{{ linux_username }}/tmp/charts"
   become: yes
   tasks:
     - name: Create a temporary directory for templating
@@ -49,7 +49,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-    template_dir: "/User/{{ linux_username }}/tmp/charts"
+    template_dir: "/Users/{{ linux_username }}/tmp/charts"
   become: yes
   tasks:
     - name: Deploy spark-pi application
@@ -66,6 +66,8 @@
     - name: Delete SparkApplication pod
       kubernetes.core.k8s:
         name: spark-pi
+        api_version: sparkoperator.k8s.io/v1beta2
+        kind: SparkApplication
         namespace: "{{ k8s_namespace }}"
         state: absent
 
@@ -75,14 +77,15 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-    temp_dir: "/User/{{ linux_username }}/tmp"
+    temp_dir: "/Users/{{ linux_username }}/tmp"
     template_dir: "{{ temp_dir }}/charts"
   become: yes
   tasks:
     - name: Deploy WebHDFS application
       kubernetes.core.k8s:
-        name: "{{ template_dir }}/webhdfs.yaml"
+        name: webhdfs
         namespace: "{{ k8s_namespace }}"
+        src: "{{ template_dir }}/webhdfs.yaml"
         state: present
         wait: true
 
@@ -105,12 +108,12 @@
           Sample test data for HDFS.
         mode: '0644'
 
-    - name: Copy /tmp/testdata.txt local file to /tmp/testdata.txt in pod
+    - name: Copy testdata.txt local file to pod
       kubernetes.core.k8s_cp:
         namespace: "{{ k8s_namespace }}"
         pod: webhdfs-0
-        remote_path: "{{ temp_dir }}/testdata.txt"
         local_path: "{{ temp_dir }}/testdata.txt"
+        remote_path: /tmp/testdata.txt
 
     - name: Issue initial PUT command to create file in HDFS
       kubernetes.core.k8s_exec:
@@ -161,7 +164,7 @@
     - name: Delete WebHDFS application
       kubernetes.core.k8s:
         name: webhdfs
-        src: "{{ templating_dir }}/webhdfs.yaml"
+        src: "{{ template_dir }}/webhdfs.yaml"
         namespace: "{{ k8s_namespace }}"
         state: absent
         wait: true

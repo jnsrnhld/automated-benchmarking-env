@@ -34,8 +34,7 @@ spec:
         path: "/tmp"
         type: Directory
   driver:
-    cores: 1
-    coreLimit: "200m"
+    coreRequest: "250m"
     memory: "512m"
     labels:
       version: {{ spark_version }}
@@ -44,8 +43,7 @@ spec:
       - name: "test-volume"
         mountPath: "/tmp"
   executor:
-    cores: 1
-    instances: 1
+    coreRequest: "250m"
     memory: "512m"
     labels:
       version: {{ spark_version }}

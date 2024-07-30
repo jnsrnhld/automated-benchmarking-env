@@ -285,7 +285,6 @@
               - "{{ mongodb_password }}"
             databases:
               - "{{ mongodb_database }}"
-          resourcesPreset: "{{ mongodb_resource_preset }}"
           arbiter:
             resourcesPreset: "{{ mongodb_resource_preset }}"
 

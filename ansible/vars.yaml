@@ -1,7 +1,7 @@
 # versions
 java_version: "17"
 helm_version: "3.15.1"
-spark_operator_version: "1.4.2"
+spark_operator_version: "1.4.6"
 mongo_db_chart_version: "15.6.14"
 stackable_operator_version: "24.3.0"
 zookeeper_version: "3.8.4"
@@ -34,7 +34,7 @@ journal_node_replicas: 1
 zookeeper_replicas: 1
 # hdfs resources
 hdfs_datanode_capacity: "45Gi"
-zookeeper_cpu_limit: "200m" # recommended is 800m
-hdfs_datanode_cpu_limit: "100m" # recommended is 400m
-hdfs_namenode_cpu_limit: "250m" # recommended is 1000m
-hdfs_journalnode_cpu_limit: "100m" # recommended is 400m
+zookeeper_cpu_limit: "400m" # recommended is 800m
+hdfs_datanode_cpu_limit: "200m" # recommended is 400m
+hdfs_namenode_cpu_limit: "500m" # recommended is 1000m
+hdfs_journalnode_cpu_limit: "400m" # recommended is 400m
