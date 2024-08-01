@@ -1,0 +1,37 @@
+- name: Gather setup info
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: yes
+  tasks:
+    - name: Get the home directory
+      command: echo $HOME
+      register: home_dir
+
+    - name: Copy kube config from remote host
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      fetch:
+        src: "{{ home_dir.stdout }}/.kube/config"
+        dest: "{{ lookup('env', 'PWD') }}/.kubeconfig"
+        flat: yes
+
+    - name: Register leader IP
+      set_fact:
+        leader_ip: "{{ ansible_ssh_host }}"
+
+    - name: Adjust IP address in .kubeconfig
+      replace:
+        path: "{{ lookup('env', 'PWD') }}/.kubeconfig"
+        regexp: 'server: https://[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:(\d+)'
+        replace: 'server: https://{{ new_ip_address }}:\1'
+      vars:
+        new_ip_address: "{{ leader_ip }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Print infos
+      debug:
+        msg:
+          - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}"
+          - "KUBECONFIG: {{ lookup('env', 'PWD') }}/.kubeconfig"
