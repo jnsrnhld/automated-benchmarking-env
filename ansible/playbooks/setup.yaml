@@ -275,10 +275,12 @@
         wait: true
         values:
           architecture: replicaset
+          replicaSetName: "{{ replica_set_name }}"
           persistence:
             storageClass: "{{ storage_class }}"
           replicaCount: "{{ replica_count }}"
           auth:
+            rootUser: "{{ mongodb_root_username }}"
             usernames:
               - "{{ mongodb_username }}"
             passwords:
@@ -287,11 +289,6 @@
               - "{{ mongodb_database }}"
           arbiter:
             resourcesPreset: "{{ mongodb_resource_preset }}"
-          externalAccess:
-            enabled: true
-            service:
-              type: NodePort
-              nodePorts[0]: 27017
 
 - name: Install HDFS Operator's
   hosts: leader
@@ -388,5 +385,3 @@
     - name: Print info message
       debug:
         msg: HDFS will need some time to set the all nodes up. You may want to watch the cluster and check if all pods are up.
-
-- import_playbook: facts.yaml

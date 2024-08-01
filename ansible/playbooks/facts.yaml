@@ -30,8 +30,50 @@
       delegate_to: localhost
       become: false
 
+    - name: Get the MongoDB secret
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      k8s_info:
+        api_version: v1
+        kind: Secret
+        name: mongodb
+        namespace: default
+      register: mongodb_secret
+
+    - name: Extract MongoDB root password and decode it
+      set_fact:
+        mongodb_root_password: "{{ mongodb_secret.resources[0].data['mongodb-root-password'] | b64decode }}"
+
+    - name: Gather replicaset members
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: mongodb-0
+        command: "mongosh -u {{ mongodb_root_username }} -p \"{{ mongodb_root_password }}\" --eval \"EJSON.stringify(rs.status().members.map(m => m.name));\""
+      register: rs_members
+
+    - name: Create mongodb connection string
+      set_fact:
+        MONGODB_CONNECTION_STRING: "mongodb://{{ mongodb_username }}:{{ mongodb_password }}@{{ rs_members.stdout | from_json() | join(',') }}/?replicaSet={{ replica_set_name }}&authSource={{ mongodb_database }}"
+
+    - name: Create list with members with stripped-off port
+      set_fact:
+        members_without_port: "{{ rs_members.stdout | from_json() | map('regex_replace', ':\\d+$', '') | list }}"
+
+    - name: Add entries to /etc/hosts for MongoDB members
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 {{ item }}"
+        create: yes
+        state: present
+      loop: "{{ members_without_port }}"
+      become: yes
+      delegate_to: localhost
+
     - name: Print infos
       debug:
         msg:
           - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}"
           - "KUBECONFIG: {{ lookup('env', 'PWD') }}/.kubeconfig"
+          - "MONGODB_CONNECTION_STRING: {{ MONGODB_CONNECTION_STRING }}"

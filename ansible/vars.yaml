@@ -20,8 +20,10 @@ storage_class: "local-storage"
 
 # mongodb
 replica_count: 1
+replica_set_name: "rs0"
 mongodb_database: "test"
 mongodb_username: "test"
+mongodb_root_username: "root"
 mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 

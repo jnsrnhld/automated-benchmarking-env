@@ -29,19 +29,18 @@ will be used and persistent volumes are automatically created and provisioned.
 Otherwise, you need to adjust the `hdfs_storage_class` variable [here](vars.yaml). Set it to the name of the 
 `StorageClass` the can provision storage for HDFS.
 
-##### Run playbooks from root dir 
+##### Run playbooks from root dir
 
 ```shell
-# Run playbook with cloud inventory (default): 
-ansible-playbook ansible/playbooks/setup.yaml
-# Run playbook with local inventory:
-ansible-playbook ansible/playbooks.yaml -i ansible/local.yaml
+# Run playbook with cloud inventory: 
+ansible-playbook ansible/playbooks/setup.yaml --ask-become-pass
 ```
 
 ###### Playbooks 
 
-| name    | content                                                                                               |
-|---------|-------------------------------------------------------------------------------------------------------|
-| setup   | Set's up the required software stack for the experiments.                                             |
-| verify  | Verifies the setup did work properly by submitting a spark application and on/offloading date to HDFS |
-| cleanup | Reverts the changes to remote machines and k8s cluster made by the setup script as far as possbible.  |
+| name    | content                                                                                                                                                                                                                                                                                                                                                                         |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| setup   | Set's up the required software stack for the experiments.                                                                                                                                                                                                                                                                                                                       |
+| facts   | Gathers all facts necessary for development. Therefor, the local `/etc/hosts` file has to be modified to make service names resolvable on your local machine. This requires a sudo password for the user you execute the playbook with. By passing `--ask-become-pass` when running the playbook, you are required to provide this password. Otherwise, the playbook will fail. |
+| verify  | Verifies the setup did work properly by submitting a spark application and on/offloading date to HDFS                                                                                                                                                                                                                                                                           |
+| cleanup | Reverts the changes to remote machines and k8s cluster made by the setup script as far as possbible.                                                                                                                                                                                                                                                                            |

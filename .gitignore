@@ -139,3 +139,6 @@ dmypy.json
 # k8s
 **/kubespray/
 .kubeconfig
+
+# operator
+operator/settings.ini
