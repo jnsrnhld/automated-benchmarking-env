@@ -287,6 +287,11 @@
               - "{{ mongodb_database }}"
           arbiter:
             resourcesPreset: "{{ mongodb_resource_preset }}"
+          externalAccess:
+            enabled: true
+            service:
+              type: NodePort
+              nodePorts[0]: 27017
 
 - name: Install HDFS Operator's
   hosts: leader
