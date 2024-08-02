@@ -6,6 +6,7 @@
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
   become: yes
+  ignore_errors: true
   tasks:
     - name: Remove Zookeeper chart
       kubernetes.core.k8s:
