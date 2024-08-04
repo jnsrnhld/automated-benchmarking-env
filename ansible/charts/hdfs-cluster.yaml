@@ -23,8 +23,6 @@ spec:
               data:
                 storageClass: {{ storage_class }}
   dataNodes:
-    config:
-      listenerClass: external-unstable
     roleGroups:
       default:
         replicas: {{ data_node_replicas }}
@@ -43,7 +41,6 @@ spec:
       default:
         replicas: {{ journal_node_replicas }}
         config:
-          listenerClass: external-stable
           resources:
             cpu:
               max: {{ hdfs_journalnode_cpu_limit }}
