@@ -23,11 +23,12 @@ spec:
               data:
                 storageClass: {{ storage_class }}
   dataNodes:
+    config:
+      listenerClass: external-unstable
     roleGroups:
       default:
         replicas: {{ data_node_replicas }}
         config:
-          listenerClass: external-unstable
           resources:
             cpu:
               max: {{ hdfs_datanode_cpu_limit }}
