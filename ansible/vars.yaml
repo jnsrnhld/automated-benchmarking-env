@@ -1,12 +1,16 @@
 # versions
 java_version: "17"
+scala_version: "2.13.14"
 helm_version: "3.15.1"
 spark_operator_version: "1.4.6"
 mongo_db_chart_version: "15.6.14"
 stackable_operator_version: "24.3.0"
 zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
-spark_version: "3.5.0"
+spark_version: "3.1.0" # HiBench does not support later versions as of September .2024
+
+# general
+listener_jar: "listener_2.12-0.1.0-SNAPSHOT.jar"
 
 # general
 listener_jar: "listener_2.13-0.1.0-SNAPSHOT.jar"
