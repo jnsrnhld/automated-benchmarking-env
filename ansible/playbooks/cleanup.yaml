@@ -151,6 +151,34 @@
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
+- name: Delete pending SparkApplications
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  vars:
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+  become: yes
+  tasks:
+    - name: Retrieve all SparkApplications in the namespace
+      kubernetes.core.k8s_info:
+        api_version: sparkoperator.k8s.io/v1beta2
+        kind: SparkApplication
+        namespace: "{{ k8s_namespace }}"
+      register: spark_app_info
+
+    - name: Extract SparkApplication names
+      set_fact:
+        spark_app_names: "{{ spark_app_info.resources | map(attribute='metadata.name') | list }}"
+
+    - name: Delete SparkApplications
+      kubernetes.core.k8s:
+        kind: SparkApplication
+        name: "{{ item }}"
+        namespace: "{{ k8s_namespace }}"
+        state: absent
+      loop: "{{ spark_app_names }}"
+      when: spark_app_names | length > 0
+
 - name: Delete all PVCs in a namespace
   hosts: leader
   vars_files:

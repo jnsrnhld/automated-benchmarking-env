@@ -239,6 +239,11 @@
         src: "{{ local_charts_dir }}/hdfs-cluster.yaml"
         dest: "{{ remote_charts_dir }}/hdfs-cluster.yaml"
 
+    - name: Copy webhdfs.yaml to leader
+      template:
+        src: "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        dest: "{{ remote_charts_dir }}/webhdfs.yaml"
+
 - name: Deploy spark-operator helm chart
   hosts: leader
   vars_files:
@@ -382,6 +387,106 @@
         state: present
         wait: true
 
-    - name: Print info message
-      debug:
-        msg: HDFS will need some time to set the all nodes up. You may want to watch the cluster and check if all pods are up.
+    - name: Deploy WebHDFS application
+      kubernetes.core.k8s:
+        name: webhdfs
+        namespace: "{{ k8s_namespace }}"
+        src: "{{ remote_charts_dir }}/webhdfs.yaml"
+        state: present
+        wait: true
+
+- name: Wait for HDFS to be ready
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  vars:
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+  become: yes
+  tasks:
+    - name: Verify HDFS NameNode pods are ready
+      k8s_info:
+        namespace: "{{ k8s_namespace }}"
+        kind: Pod
+        label_selectors:
+          - 'role=namenode'
+      register: namenode_pods
+      retries: 30
+      delay: 10
+      until: namenode_pods.resources | map(attribute='status.containerStatuses') | map('map', attribute='ready') | flatten | reject('equalto', true) | list | length == 0
+
+    - name: Verify HDFS DataNode pods are ready
+      k8s_info:
+        namespace: "{{ k8s_namespace }}"
+        kind: Pod
+        label_selectors:
+          - 'role=datanode'
+      register: datanode_pods
+      retries: 30
+      delay: 10
+      until: datanode_pods.resources | map(attribute='status.containerStatuses') | map('map', attribute='ready') | flatten | reject('equalto', true) | list | length == 0
+
+- name: Copy custom SparkListener to HDFS
+  hosts: leader
+  become: yes
+  vars_files:
+    - ../vars.yaml
+  vars:
+    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+    temp_dir: "/Users/{{ linux_username }}/tmp"
+    remote_charts_dir: "{{ temp_dir }}/charts"
+  tasks:
+    - name: Copy the JAR file to remote machine
+      synchronize:
+        src: "{{ lookup('env', 'PWD') }}/ansible/jars/{{ listener_jar }}"
+        dest: "{{ temp_dir }}/{{ listener_jar }}"
+        delete: yes
+
+    - name: Copy jar local file to webhdfs pod
+      kubernetes.core.k8s_cp:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        local_path: "{{ temp_dir }}/{{ listener_jar }}"
+        remote_path: "/tmp/{{ listener_jar }}"
+
+    - name: Issue initial PUT command to create file in HDFS
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XPUT -T /tmp/{{ listener_jar }} \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/{{ listener_jar }}?user.name=stackable&op=CREATE&noredirect=true\""
+      register: put_result
+
+    - name: Extract location URL from PUT response
+      set_fact:
+        location_url: "{{ put_result.stdout | from_json() | json_query('Location') }}"
+
+    - name: Issue second PUT command to complete file creation
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XPUT -T /tmp/{{ listener_jar }} {{ location_url }}"
+
+    - name: Recheck status to verify file creation
+      kubernetes.core.k8s_exec:
+        namespace: "{{ k8s_namespace }}"
+        pod: webhdfs-0
+        command: "curl -s -XGET \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/?op=LISTSTATUS\""
+      register: status_result
+
+    - name: Parse status_result stdout as JSON
+      set_fact:
+        file_status: "{{ status_result.stdout | from_json }}"
+
+    - name: Verify the file_status contains the created file
+      assert:
+        that:
+          - file_status.FileStatuses.FileStatus | length > 0
+          - file_status.FileStatuses.FileStatus[0].pathSuffix == "{{ listener_jar }}"
+          - file_status.FileStatuses.FileStatus[0].length > 0
+
+    - name: Delete WebHDFS application
+      kubernetes.core.k8s:
+        name: webhdfs
+        src: "{{ remote_charts_dir }}/webhdfs.yaml"
+        namespace: "{{ k8s_namespace }}"
+        state: absent
+        wait: true

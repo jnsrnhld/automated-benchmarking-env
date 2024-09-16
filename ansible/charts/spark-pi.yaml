@@ -50,3 +50,6 @@ spec:
     volumeMounts:
       - name: "test-volume"
         mountPath: "/tmp"
+  sparkConf:
+    "spark.jars": "hdfs://listener-{{ hdfs_cluster_name }}-namenode-default-0:8020/{{ listener_jar }}"
+    "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"

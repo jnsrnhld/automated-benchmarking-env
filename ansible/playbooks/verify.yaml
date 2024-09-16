@@ -146,9 +146,10 @@
     - name: Verify the file_status contains the created file
       assert:
         that:
+#          file_status.FileStatuses.FileStatus[0] is the custom SparkListener .jar already added in setup.yaml script
           - file_status.FileStatuses.FileStatus | length > 0
-          - file_status.FileStatuses.FileStatus[0].pathSuffix == "testdata.txt"
-          - file_status.FileStatuses.FileStatus[0].length > 0
+          - file_status.FileStatuses.FileStatus[1].pathSuffix == "testdata.txt"
+          - file_status.FileStatuses.FileStatus[1].length > 0
 
     - name: Delete the testdata.txt file from HDFS
       kubernetes.core.k8s_exec:

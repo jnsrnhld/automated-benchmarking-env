@@ -8,6 +8,9 @@ zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
 spark_version: "3.5.0"
 
+# general
+listener_jar: "listener_2.13-0.1.0-SNAPSHOT.jar"
+
 # this user can be used for ansible scripts and experiment execution
 linux_username: "mtuser"
 linux_password: "Admin1!"
