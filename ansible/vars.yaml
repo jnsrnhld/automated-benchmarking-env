@@ -12,9 +12,6 @@ spark_version: "3.1.0" # HiBench does not support later versions as of September
 # general
 listener_jar: "listener_2.12-0.1.0-SNAPSHOT.jar"
 
-# general
-listener_jar: "listener_2.13-0.1.0-SNAPSHOT.jar"
-
 # this user can be used for ansible scripts and experiment execution
 linux_username: "mtuser"
 linux_password: "Admin1!"
