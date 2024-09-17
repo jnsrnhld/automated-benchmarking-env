@@ -1,0 +1,47 @@
+---
+# When changing the hibench.conf in any way, e.g. when changing the scale, we need to recompile its modules
+- name: Build and deploy HiBench
+  hosts: leader
+  become: true
+  vars_files:
+    - ../vars.yaml
+  vars:
+    local_template_dir: "{{ lookup('env', 'PWD') }}/ansible/templates"
+    remote_template_dir: "/Users/{{ linux_username }}/tmp/charts"
+    hibench_dir: "/Users/{{ linux_username }}/hibench"
+  tasks:
+    - name: Template Hadoop config
+      template:
+        src: "{{ local_template_dir }}/hadoop.conf"
+        dest: "{{ hibench_dir }}/conf/hadoop.conf"
+
+    - name: Template HiBench config
+      template:
+        src: "{{ local_template_dir }}/hibench.conf"
+        dest: "{{ remote_template_dir }}/hibench.conf"
+
+    - name: Replace default hibench.conf
+      copy:
+        src: "{{ remote_template_dir }}/hibench.conf"
+        dest: "{{ hibench_dir }}/conf/hibench.conf"
+        remote_src: yes
+
+    - name: Template Spark config
+      template:
+        src: "{{ local_template_dir }}/spark.conf"
+        dest: "{{ hibench_dir }}/conf/spark.conf"
+
+    - name: Build HiBench
+      command:
+        cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
+        chdir: "{{ hibench_dir }}"
+
+    # generated workloads are automatically submitted to HDFS - connection is configured in hadoop.conf
+    - name: Run prepare script
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item }}/prepare/prepare.sh"
+      loop:
+        - "micro/wordcount"
+#        - "ml/kmeans"
+
+#  /Users/mtuser/hibench/bin/workloads/ml/kmeans/prepare/prepare.sh
+#  /Users/mtuser/hibench/bin/workloads/ml/kmeans/prepare/prepare.sh

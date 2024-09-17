@@ -5,7 +5,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: yes
+  become: true
   ignore_errors: true
   tasks:
     - name: Remove Zookeeper chart
@@ -96,7 +96,7 @@
 
 - name: Remove bind-mount directories for PersistentVolumes on all nodes
   hosts: remote
-  become: yes
+  become: true
   vars_files:
     - ../vars.yaml
   tasks:
@@ -157,7 +157,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: yes
+  become: true
   tasks:
     - name: Retrieve all SparkApplications in the namespace
       kubernetes.core.k8s_info:
@@ -185,7 +185,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: yes
+  become: true
   tasks:
     - name: Retrieve all PVCs in the namespace
       kubernetes.core.k8s_info:
@@ -213,7 +213,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: yes
+  become: true
   tasks:
     - name: Retrieve all PVs in the namespace
       kubernetes.core.k8s_info:

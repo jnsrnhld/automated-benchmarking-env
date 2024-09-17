@@ -1,13 +1,19 @@
 # versions
-java_version: "17"
-scala_version: "2.13.14"
+java_version: "8"
 helm_version: "3.15.1"
 spark_operator_version: "1.4.6"
 mongo_db_chart_version: "15.6.14"
 stackable_operator_version: "24.3.0"
 zookeeper_version: "3.8.4"
 hdfs_version: "3.3.4"
-spark_version: "3.1.0" # HiBench does not support later versions as of September .2024
+spark_version: "3.1.1" # HiBench does not support later versions as of September 2024
+scala_version: "2.12.20" # same for scala, and these versions directly correlate with the hibench_profile
+# HiBench related versions
+hadoop_version: "3.2.4"
+hibench_version: "827c9f6" # earlier commits do not support Spark 3 and there is no tagged release for version 8
+hibench_artifact_version: "8.0-SNAPSHOT"
+spark_hibench_profile: "3.1"
+scala_hibench_profile: "2.12"
 
 # general
 listener_jar: "listener_2.12-0.1.0-SNAPSHOT.jar"
@@ -17,12 +23,12 @@ linux_username: "mtuser"
 linux_password: "Admin1!"
 venv_path: "/Users/{{ linux_username }}/venv"
 
-# k8s
+# Kubernetes
 k8s_namespace: "default"
 persistent_volume_per_node: "45Gi"
 storage_class: "local-storage"
 
-# mongodb
+# MongoDB
 replica_count: 1
 replica_set_name: "rs0"
 mongodb_database: "test"
@@ -31,16 +37,19 @@ mongodb_root_username: "root"
 mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 
-# hdfs
+# HDFS
 hdfs_cluster_name: "hdfs-cluster"
 replication_factor: 1 # should be <= data_node_replicas
 data_node_replicas: 1
 name_node_replicas: 2 # < 2 nodes require disabling shared_edits_dir in ansible/charts/hdfs-cluster.yaml
 journal_node_replicas: 1
 zookeeper_replicas: 1
-# hdfs resources
+# HDFS resources
 hdfs_datanode_capacity: "45Gi"
 zookeeper_cpu_limit: "400m" # recommended is 800m
 hdfs_datanode_cpu_limit: "200m" # recommended is 400m
 hdfs_namenode_cpu_limit: "500m" # recommended is 1000m
 hdfs_journalnode_cpu_limit: "400m" # recommended is 400m
+
+# HiBench
+scale: tiny

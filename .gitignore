@@ -142,6 +142,3 @@ dmypy.json
 
 # operator
 operator/settings.ini
-
-# tmp files
-**/hibench/

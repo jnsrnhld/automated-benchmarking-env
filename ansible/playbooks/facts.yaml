@@ -2,7 +2,7 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
-  become: yes
+  become: true
   tasks:
     - name: Get the home directory
       command: echo $HOME
@@ -68,7 +68,7 @@
         create: yes
         state: present
       loop: "{{ members_without_port }}"
-      become: yes
+      become: true
       delegate_to: localhost
 
     - name: Retrieve HDFS NodePort details

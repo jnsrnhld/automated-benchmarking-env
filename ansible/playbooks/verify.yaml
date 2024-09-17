@@ -5,7 +5,7 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: yes
+  become: true
   tasks:
     - name: "Check {{ mongodb_database }} db status"
       kubernetes.core.k8s_exec:
@@ -24,8 +24,9 @@
   vars_files:
     - ../vars.yaml
   vars:
+    local_template_dir: "{{ lookup('env', 'PWD') }}/ansible/templates"
     template_dir: "/Users/{{ linux_username }}/tmp/charts"
-  become: yes
+  become: true
   tasks:
     - name: Create a temporary directory for templating
       file:
@@ -35,12 +36,12 @@
 
     - name: Template the Zookeeper cluster file
       template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/spark-pi.yaml"
+        src: "{{ local_template_dir }}/spark-pi.yaml"
         dest: "{{ template_dir }}/spark-pi.yaml"
 
     - name: Copy webhdfs.yaml to leader
       template:
-        src: "{{ lookup('env', 'PWD') }}/ansible/charts/webhdfs.yaml"
+        src: "{{ local_template_dir }}/webhdfs.yaml"
         dest: "{{ template_dir }}/webhdfs.yaml"
 
 - name: Deploy a test Spark application to the k8s cluster
@@ -50,7 +51,7 @@
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
     template_dir: "/Users/{{ linux_username }}/tmp/charts"
-  become: yes
+  become: true
   tasks:
     - name: Deploy spark-pi application
       kubernetes.core.k8s:
@@ -79,7 +80,7 @@
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
     temp_dir: "/Users/{{ linux_username }}/tmp"
     template_dir: "{{ temp_dir }}/charts"
-  become: yes
+  become: true
   tasks:
     - name: Deploy WebHDFS application
       kubernetes.core.k8s:
