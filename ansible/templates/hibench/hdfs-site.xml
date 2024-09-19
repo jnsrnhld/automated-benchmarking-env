@@ -1,0 +1,6 @@
+<configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>{{ hdfs_replication_factor }}</value>
+    </property>
+</configuration>

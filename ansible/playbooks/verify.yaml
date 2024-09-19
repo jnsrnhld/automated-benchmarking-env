@@ -23,26 +23,23 @@
   hosts: leader
   vars_files:
     - ../vars.yaml
-  vars:
-    local_template_dir: "{{ lookup('env', 'PWD') }}/ansible/templates"
-    template_dir: "/Users/{{ linux_username }}/tmp/charts"
   become: true
   tasks:
     - name: Create a temporary directory for templating
       file:
-        path: "{{ template_dir }}"
+        path: "{{ remote_template_dir }}"
         state: directory
         mode: '0755'
 
     - name: Template the Zookeeper cluster file
       template:
         src: "{{ local_template_dir }}/spark-pi.yaml"
-        dest: "{{ template_dir }}/spark-pi.yaml"
+        dest: "{{ remote_template_dir }}/spark-pi.yaml"
 
     - name: Copy webhdfs.yaml to leader
       template:
         src: "{{ local_template_dir }}/webhdfs.yaml"
-        dest: "{{ template_dir }}/webhdfs.yaml"
+        dest: "{{ remote_template_dir }}/webhdfs.yaml"
 
 - name: Deploy a test Spark application to the k8s cluster
   hosts: leader
@@ -50,13 +47,12 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-    template_dir: "/Users/{{ linux_username }}/tmp/charts"
   become: true
   tasks:
     - name: Deploy spark-pi application
       kubernetes.core.k8s:
         name: spark-pi
-        src: "{{ template_dir }}/spark-pi.yaml"
+        src: "{{ remote_template_dir }}/spark-pi.yaml"
         namespace: "{{ k8s_namespace }}"
         state: present
 
@@ -78,15 +74,13 @@
     - ../vars.yaml
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-    temp_dir: "/Users/{{ linux_username }}/tmp"
-    template_dir: "{{ temp_dir }}/charts"
   become: true
   tasks:
     - name: Deploy WebHDFS application
       kubernetes.core.k8s:
         name: webhdfs
         namespace: "{{ k8s_namespace }}"
-        src: "{{ template_dir }}/webhdfs.yaml"
+        src: "{{ remote_template_dir }}/webhdfs.yaml"
         state: present
         wait: true
 
@@ -104,7 +98,7 @@
 
     - name: Create testdata.txt file locally
       copy:
-        dest: "{{ temp_dir }}/testdata.txt"
+        dest: "/tmp/testdata.txt"
         content: |
           Sample test data for HDFS.
         mode: '0644'
@@ -113,7 +107,7 @@
       kubernetes.core.k8s_cp:
         namespace: "{{ k8s_namespace }}"
         pod: webhdfs-0
-        local_path: "{{ temp_dir }}/testdata.txt"
+        local_path: "/tmp/testdata.txt"
         remote_path: /tmp/testdata.txt
 
     - name: Issue initial PUT command to create file in HDFS
@@ -160,13 +154,13 @@
 
     - name: Clean up local testdata.txt file
       file:
-        path: "{{ temp_dir }}/testdata.txt"
+        path: "/tmp/testdata.txt"
         state: absent
 
     - name: Delete WebHDFS application
       kubernetes.core.k8s:
         name: webhdfs
-        src: "{{ template_dir }}/webhdfs.yaml"
+        src: "{{ remote_template_dir }}/webhdfs.yaml"
         namespace: "{{ k8s_namespace }}"
         state: absent
         wait: true

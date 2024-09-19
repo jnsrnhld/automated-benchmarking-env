@@ -22,7 +22,7 @@ gcloud compute firewall-rules create kubespray-cluster-allow-external \
 for i in 0; do # adjust amount of control planes if necessary
 gcloud compute instances create controller-${i} \
 --can-ip-forward \
---create-disk=auto-delete=yes,boot=yes,device-name=instance-20240718-210829,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240701,mode=rw,size=62,type=projects/fog-computing-427208/zones/us-central1-f/diskTypes/pd-balanced \
+--create-disk=auto-delete=yes,boot=yes,device-name=instance-20240920-065704,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240904,mode=rw,size=62,type=pd-balanced \
 --machine-type e2-highcpu-4 \
 --private-network-ip 10.240.0.1${i} \
 --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
@@ -36,7 +36,7 @@ for i in 0 1; do # adjust amount of workers if necessary
 gcloud compute instances create worker-${i} \
 --can-ip-forward \
 --machine-type e2-standard-2 \
---create-disk=auto-delete=yes,boot=yes,device-name=instance-20240718-210829,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240701,mode=rw,size=62,type=projects/fog-computing-427208/zones/us-central1-f/diskTypes/pd-balanced \
+--create-disk=auto-delete=yes,boot=yes,device-name=instance-20240920-065704,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240904,mode=rw,size=62,type=pd-balanced \
 --private-network-ip 10.240.0.2${i} \
 --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
 --subnet kubernetes-subnet \
@@ -45,4 +45,4 @@ gcloud compute instances create worker-${i} \
 done
 
 # list instances
-gcloud compute instances list --filter="tags.items=kubespray-cluster"
+gcloud compute instances list --filter="tags.items=kubernetes-the-kubespray-way"

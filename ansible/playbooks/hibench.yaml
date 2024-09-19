@@ -3,21 +3,18 @@
 - name: Build and deploy HiBench
   hosts: leader
   become: true
+  become_user: "{{ linux_username }}"
   vars_files:
     - ../vars.yaml
-  vars:
-    local_template_dir: "{{ lookup('env', 'PWD') }}/ansible/templates"
-    remote_template_dir: "/Users/{{ linux_username }}/tmp/charts"
-    hibench_dir: "/Users/{{ linux_username }}/hibench"
   tasks:
     - name: Template Hadoop config
       template:
-        src: "{{ local_template_dir }}/hadoop.conf"
+        src: "{{ hibench_template_dir }}/hadoop.conf"
         dest: "{{ hibench_dir }}/conf/hadoop.conf"
 
     - name: Template HiBench config
       template:
-        src: "{{ local_template_dir }}/hibench.conf"
+        src: "{{ hibench_template_dir }}/hibench.conf"
         dest: "{{ remote_template_dir }}/hibench.conf"
 
     - name: Replace default hibench.conf
@@ -28,11 +25,11 @@
 
     - name: Template Spark config
       template:
-        src: "{{ local_template_dir }}/spark.conf"
+        src: "{{ hibench_template_dir }}/spark.conf"
         dest: "{{ hibench_dir }}/conf/spark.conf"
 
-    - name: Build HiBench
-      command:
+    - name: Build HiBench (This might take > 1h initially because there are artifacts downloaded with several 100 MB)
+      shell:
         cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
         chdir: "{{ hibench_dir }}"
 
@@ -41,7 +38,8 @@
       command: bash "{{ hibench_dir }}/bin/workloads/{{ item }}/prepare/prepare.sh"
       loop:
         - "micro/wordcount"
-#        - "ml/kmeans"
+      register: prepare_script_out
 
-#  /Users/mtuser/hibench/bin/workloads/ml/kmeans/prepare/prepare.sh
-#  /Users/mtuser/hibench/bin/workloads/ml/kmeans/prepare/prepare.sh
+    - name: Debug
+      debug:
+        msg: "{{ prepare_script_out }}"

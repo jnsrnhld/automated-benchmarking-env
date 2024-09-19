@@ -52,6 +52,6 @@ spec:
         mountPath: "/tmp"
   deps:
     jars:
-      - "hdfs://listener-{{ hdfs_cluster_name }}-namenode-default-0:8020/{{ listener_jar }}"
+      - "{{ hdfs_address }}/{{ listener_jar }}"
   sparkConf:
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
