@@ -63,8 +63,7 @@ def find_and_modify_run_sh_files(base_dir: str) -> None:
             if file == "run.sh":
                 input_file = os.path.join(root, file)
 
-                relative_path = os.path.relpath(root, base_dir)
-                output_file_name = f"{relative_path.replace(os.sep, '-')}-run-command.sh"
+                output_file_name = "run-command.sh"
                 output_file = os.path.join(root, output_file_name)
 
                 modify_script(input_file, output_file)
