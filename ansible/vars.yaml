@@ -51,12 +51,12 @@ hdfs_datanode_cpu_limit: "200m" # recommended is 400m
 hdfs_namenode_cpu_limit: "500m" # recommended is 1000m
 hdfs_journalnode_cpu_limit: "400m" # recommended is 400m
 
-# HiBench
-scale: tiny
-
 # local paths
-local_template_dir: "{{ lookup('env', 'PWD') }}/ansible/templates"
+working_dir: "{{ lookup('env', 'PWD') }}"
+ansible_dir: "{{ working_dir }}/ansible"
+local_template_dir: "{{ ansible_dir }}/templates"
 hibench_template_dir: "{{ local_template_dir }}/hibench"
+local_scripts_dir: "{{ ansible_dir }}/scripts"
 
 # remote paths
 user_dir: "/home/{{ linux_username }}"
@@ -64,3 +64,4 @@ venv_path: "{{ user_dir }}/venv"
 remote_template_dir: "{{ user_dir }}/templates"
 hadoop_dir: "{{ user_dir }}/hadoop"
 hibench_dir: "{{ user_dir }}/hibench"
+maven_cache_download_plugin_dir: "{{ user_dir }}/.m2/repository/cache/maven-download-plugin"

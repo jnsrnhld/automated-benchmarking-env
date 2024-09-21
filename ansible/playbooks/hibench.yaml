@@ -3,7 +3,6 @@
 - name: Build and deploy HiBench
   hosts: leader
   become: true
-  become_user: "{{ linux_username }}"
   vars_files:
     - ../vars.yaml
   tasks:
@@ -33,13 +32,28 @@
         cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
         chdir: "{{ hibench_dir }}"
 
-    # generated workloads are automatically submitted to HDFS - connection is configured in hadoop.conf
+    # generated workloads are automatically submitted to HDFS - if the script is stuck here, the machine likely has
+    # not enough resources
     - name: Run prepare script
       command: bash "{{ hibench_dir }}/bin/workloads/{{ item }}/prepare/prepare.sh"
       loop:
         - "micro/wordcount"
-      register: prepare_script_out
 
-    - name: Debug
-      debug:
-        msg: "{{ prepare_script_out }}"
+    - name: Check for generated workloads
+      cmd: "{{ hadoop_dir }}/bin/hdfs dfs -ls /HiBench/{{  }}"
+      loop:
+        - "micro/wordcount"
+
+    - name: Run run_script_modifier.py to generate adjusted HiBench run scripts
+      shell:
+        cmd: "{{ local_scripts_dir }}/run_script_modifier.py"
+        chdir: "{{ hibench_dir }}"
+
+    - name: Copy scripts
+
+
+#      bin/hdfs dfs -ls /HiBench/Kmeans/Input
+#      Found 3 items
+#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 17:00 /HiBench/Kmeans/Input/cluster
+#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 17:00 /HiBench/Kmeans/Input/samples
+#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 16:59 /HiBench/Kmeans/Input/samples-seeds

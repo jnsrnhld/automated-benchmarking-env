@@ -135,6 +135,7 @@ dmypy.json
 **/.idea/
 **/target/
 *.iml
+.m2/
 
 # k8s
 **/kubespray/

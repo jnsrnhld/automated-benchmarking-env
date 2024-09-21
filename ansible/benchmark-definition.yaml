@@ -1,0 +1,13 @@
+# Data scale profile. Available value is tiny, small, large, huge, gigantic and bigdata.
+# The definition of these profiles can be found in the workload's conf file,
+# i.e. https://github.com/Intel-bigdata/HiBench/blob/master/conf/workloads/micro/wordcount.conf
+scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
+
+# Which workloads do you want to run?
+workloads:
+  - wordcount:
+      enabled: true
+      path: micro/wordcount
+  - kmeans:
+      enabled: false
+      path: ml/kmeans

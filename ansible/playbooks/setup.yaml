@@ -55,13 +55,16 @@
       apt:
         name: python3-venv
         state: present
-      when: ansible_os_family == 'Debian'
+        force_apt_get: true
+        update_cache: true
 
     - name: Install pip packages
       pip:
         name:
           - packaging
           - virtualenv
+          - jinja2
+          - pathlib
 
     - name: Create virtual environment
       become_user: root
@@ -654,3 +657,9 @@
             version: "{{ hibench_version }}"
             force: yes
             update: yes
+
+        - name: Add maven archives to cache
+          synchronize:
+            src: "{{ lookup('env', 'PWD') }}/.m2.repository.cache.maven-download-plugin"
+            dest: "{{ maven_cache_download_plugin_dir }}"
+            recursive: true
