@@ -136,18 +136,18 @@
 
     - name: Remove mongodb data target directory
       file:
-        path: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
+        path: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
         state: absent
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Remove Zookeeper data target directory
       file:
-        path: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
+        path: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
         state: absent
 
     - name: Remove HDFS data target directory
       file:
-        path: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        path: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: absent
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
@@ -235,15 +235,20 @@
       loop: "{{ pv_names }}"
       when: pv_names | length > 0
 
-- name: Remove users dir
+- name: Cleanup leader
   hosts: leader
   vars_files:
     - ../vars.yaml
   become: true
   tasks:
+    - name: Stop Hadoop services
+      ignore_errors: true
+      become_user: "{{ linux_username }}"
+      command: "{{ hadoop_dir }}/sbin/stop-all.sh"
+
     - name: Remove users dir
       file:
-        path: /Users/{{ linux_username }}
+        path: "{{ user_dir }}"
         state: absent
 
 - name: Revert user creation

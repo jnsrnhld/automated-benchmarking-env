@@ -5,9 +5,5 @@ scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
 
 # Which workloads do you want to run?
 workloads:
-  - wordcount:
-      enabled: true
-      path: micro/wordcount
-  - kmeans:
-      enabled: false
-      path: ml/kmeans
+  - { name: wordcount, enabled: true, path: micro/wordcount }
+  - { name: kmeans, enabled: false, path: ml/kmeans }

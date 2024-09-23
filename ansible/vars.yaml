@@ -38,7 +38,7 @@ mongodb_resource_preset: "nano"
 
 # HDFS
 hdfs_cluster_name: "hdfs-cluster"
-hdfs_address: "hdfs://localhost:9000" # "hdfs://listener-{{ hdfs_cluster_name }}-namenode-default-0:8020"
+hdfs_address: "hdfs://listener-{{ hdfs_cluster_name }}-namenode-default-0:8020" # "hdfs://localhost:9000"
 hdfs_replication_factor: 1 # should be <= data_node_replicas
 data_node_replicas: 1
 name_node_replicas: 2 # < 2 nodes require disabling shared_edits_dir in ansible/charts/hdfs-cluster.yaml

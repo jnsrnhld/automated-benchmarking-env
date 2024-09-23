@@ -22,6 +22,9 @@ spec:
             storage:
               data:
                 storageClass: {{ storage_class }}
+        configOverrides:
+          hdfs-site.xml:
+            dfs.permissions.superusergroup: "hdfs"
   dataNodes:
     config:
       listenerClass: external-unstable
@@ -37,6 +40,9 @@ spec:
                 count: 1
                 capacity: {{ hdfs_datanode_capacity }}
                 storageClass: {{ storage_class }}
+        configOverrides:
+          hdfs-site.xml:
+            dfs.permissions.superusergroup: "hdfs"
   journalNodes:
     roleGroups:
       default:
@@ -48,3 +54,6 @@ spec:
             storage:
               data:
                 storageClass: {{ storage_class }}
+        configOverrides:
+          hdfs-site.xml:
+            dfs.permissions.superusergroup: "hdfs"

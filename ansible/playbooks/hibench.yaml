@@ -1,10 +1,10 @@
 ---
-# When changing the hibench.conf in any way, e.g. when changing the scale, we need to recompile its modules
-- name: Build and deploy HiBench
+- name: Prepare HiBench benchmark jobs
   hosts: leader
   become: true
   vars_files:
     - ../vars.yaml
+    - ../benchmark-definition.yaml
   tasks:
     - name: Template Hadoop config
       template:
@@ -27,33 +27,32 @@
         src: "{{ hibench_template_dir }}/spark.conf"
         dest: "{{ hibench_dir }}/conf/spark.conf"
 
-    - name: Build HiBench (This might take > 1h initially because there are artifacts downloaded with several 100 MB)
-      shell:
-        cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
-        chdir: "{{ hibench_dir }}"
-
     # generated workloads are automatically submitted to HDFS - if the script is stuck here, the machine likely has
     # not enough resources
     - name: Run prepare script
-      command: bash "{{ hibench_dir }}/bin/workloads/{{ item }}/prepare/prepare.sh"
-      loop:
-        - "micro/wordcount"
+      become_user: "{{ linux_username }}"
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.path }}/prepare/prepare.sh"
+      loop: "{{ workloads }}"
+      when: item.enabled
 
-    - name: Check for generated workloads
-      cmd: "{{ hadoop_dir }}/bin/hdfs dfs -ls /HiBench/{{  }}"
-      loop:
-        - "micro/wordcount"
+    - name: Prepare templater dict
+      vars:
+        hibench_jar: "FIXME"
+      copy:
+        dest: "{{ hibench_dir }}/values.yaml"
+        content: |
+          spark_version: {{ spark_version }}
+          hibench_jar: {{ hibench_jar }}
+          listener_jar: {{ listener_jar }}
+          hdfs_address: {{ hdfs_address }}
 
-    - name: Run run_script_modifier.py to generate adjusted HiBench run scripts
-      shell:
-        cmd: "{{ local_scripts_dir }}/run_script_modifier.py"
+    - name: Run templater
+      command:
+        cmd: |
+          bash generate_templates.sh \
+            "{{ hibench_dir }}/bin/workloads/{{ item.value.path }}/run_command.sh" \
+            "{{ hibench_dir }}/values.yaml" \
+            "{{ hibench_dir }}/hibench-spark-app.yaml"
         chdir: "{{ hibench_dir }}"
-
-    - name: Copy scripts
-
-
-#      bin/hdfs dfs -ls /HiBench/Kmeans/Input
-#      Found 3 items
-#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 17:00 /HiBench/Kmeans/Input/cluster
-#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 17:00 /HiBench/Kmeans/Input/samples
-#      drwxr-xr-x   - mtuser supergroup          0 2024-09-20 16:59 /HiBench/Kmeans/Input/samples-seeds
+      loop: "{{ workloads | dict2items }}"
+      when: item.enabled

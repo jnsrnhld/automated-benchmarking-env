@@ -24,6 +24,17 @@
         line: '%{{ linux_username }} ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
 
+    - name: Create hdfs user group
+      group:
+        name: hdfs
+        state: present
+
+    - name: Add user to hdfs group
+      user:
+        name: "{{ linux_username }}"
+        groups: hdfs
+        append: yes
+
     - name: Install acl to fix a tmp-file creation issue when running ansible tasks as non-root user
       apt:
         name: acl
@@ -109,7 +120,7 @@
       copy:
         remote_src: true
         src: /etc/kubernetes/admin.conf
-        dest: /home/{{ linux_username }}/.kube/config
+        dest: "{{ user_dir}}/.kube/config"
         owner: "{{ linux_username }}"
         group: "{{ linux_username }}"
         mode: '0644'
@@ -173,27 +184,27 @@
 
     - name: Create MongoDB target directory if it does not exist
       file:
-        path: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
+        path: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, replica_count + 1) }}"
 
     - name: Create Zookeeper data target directory if it does not exist
       file:
-        path: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
+        path: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
         state: directory
         mode: '0755'
 
     - name: Create HDFS data target directory if it does not exist
       file:
-        path: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        path: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         state: directory
         mode: '0755'
       loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
     - name: Bind mount MongoDB directories
       ansible.posix.mount:
-        src: "/Users/{{ linux_username }}/mongodb-data-{{ ansible_hostname | lower }}"
+        src: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
         path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
         fstype: none
         opts: bind
@@ -202,7 +213,7 @@
 
     - name: Bind mount zookeeper directories
       ansible.posix.mount:
-        src: "/Users/{{ linux_username }}/zookeeper-data-{{ ansible_hostname | lower }}"
+        src: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
         path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
         fstype: none
         opts: bind
@@ -210,7 +221,7 @@
 
     - name: Bind mount hdfs directories
       ansible.posix.mount:
-        src: "/Users/{{ linux_username }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
+        src: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
         fstype: none
         opts: bind
@@ -534,6 +545,14 @@
             line: 'export PATH=$JAVA_HOME/bin:$PATH'
             state: present
 
+        - name: Ensure .ssh dir is present
+          file:
+            path: "{{ user_dir }}/.ssh"
+            state: directory
+            mode: '0755'
+            owner: "{{ linux_username }}"
+            group: "{{ linux_username }}"
+
         - name: Generate an SSH key pair if it doesn't exist
           openssh_keypair:
             path: "{{ user_dir }}/.ssh/id_rsa"
@@ -633,7 +652,7 @@
             fail_msg: "One or more required JVM processes are not running"
             success_msg: "All required JVM processes are running"
 
-    - name: Pull HiBench repo
+    - name: Setup HiBench repo
       block:
         - name: Remove the existing repository if present
           file:
@@ -658,8 +677,48 @@
             force: yes
             update: yes
 
+        - name: Ensure maven cache exists
+          file:
+            path: "{{ maven_cache_download_plugin_dir }}"
+            state: directory
+            owner: "{{ linux_username }}"
+            group: "{{ linux_username }}"
+            mode: '0755'
+
         - name: Add maven archives to cache
           synchronize:
             src: "{{ lookup('env', 'PWD') }}/.m2.repository.cache.maven-download-plugin"
             dest: "{{ maven_cache_download_plugin_dir }}"
             recursive: true
+
+        - name: Build HiBench (This might take ~1h initially because there are artifacts downloaded with several 100 MB)
+          shell:
+            cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
+            chdir: "{{ hibench_dir }}"
+
+        - name: Copy SparApp template
+          copy:
+            src: "{{ local_template_dir }}/hibench-spark-app.yaml"
+            dest: "{{ hibench_dir }}"
+            owner: "{{ linux_username }}"
+            group: "{{ linux_username }}"
+            mode: '0644'
+
+        - name: Copy scripts to HiBench dir
+          copy:
+            src: "{{ local_scripts_dir }}/{{ item }}"
+            dest: "{{ hibench_dir }}"
+            owner: "{{ linux_username }}"
+            group: "{{ linux_username }}"
+            mode: '0644'
+          loop:
+            - generate_templates.sh
+            - run_script_modifier.py
+            - sparkapp-templater.py
+
+        - name: Execute run_script_modifier.py
+          vars:
+            ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+          command:
+            cmd: "python3 run_script_modifier.py {{ hibench_dir }}"
+            chdir: "{{ hibench_dir }}"
