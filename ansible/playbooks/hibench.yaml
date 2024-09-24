@@ -1,10 +1,13 @@
 ---
 - name: Prepare HiBench benchmark jobs
   hosts: leader
-  become: true
   vars_files:
     - ../vars.yaml
     - ../benchmark-definition.yaml
+  vars:
+    leader_hostname: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
+  become: true
+  become_user: "{{ linux_username }}"
   tasks:
     - name: Template Hadoop config
       template:
@@ -12,6 +15,8 @@
         dest: "{{ hibench_dir }}/conf/hadoop.conf"
 
     - name: Template HiBench config
+      vars:
+        parallelism: "{{ groups['follower'] | length }}"
       template:
         src: "{{ hibench_template_dir }}/hibench.conf"
         dest: "{{ remote_template_dir }}/hibench.conf"
@@ -27,32 +32,36 @@
         src: "{{ hibench_template_dir }}/spark.conf"
         dest: "{{ hibench_dir }}/conf/spark.conf"
 
-    # generated workloads are automatically submitted to HDFS - if the script is stuck here, the machine likely has
-    # not enough resources
     - name: Run prepare script
       become_user: "{{ linux_username }}"
-      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.path }}/prepare/prepare.sh"
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/prepare/prepare.sh"
       loop: "{{ workloads }}"
       when: item.enabled
 
+    - name: Upload jars
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{ hibench_dir }}/{{ item.value.dir }}/{{ item.value.file }} {{ hdfs_user_dir }}"
+      loop: "{{ jars | dict2items }}"
+
     - name: Prepare templater dict
       vars:
-        hibench_jar: "FIXME"
+        lister_jar_full_path: "{{ hdfs_address }}{{ hdfs_user_dir }}/{{ listener_jar }}"
       copy:
-        dest: "{{ hibench_dir }}/values.yaml"
+        dest: "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
         content: |
+          name: {{ item.name }}
           spark_version: {{ spark_version }}
-          hibench_jar: {{ hibench_jar }}
-          listener_jar: {{ listener_jar }}
-          hdfs_address: {{ hdfs_address }}
+          hibench_jar: {{ hdfs_address }}{{ hdfs_user_dir }}/{{ lookup('vars', 'jars')[item.category]['file'] }}
+          listener_jar: {{ lister_jar_full_path }}
+      loop: "{{ workloads }}"
+      when: item.enabled
 
     - name: Run templater
       command:
-        cmd: |
-          bash generate_templates.sh \
-            "{{ hibench_dir }}/bin/workloads/{{ item.value.path }}/run_command.sh" \
-            "{{ hibench_dir }}/values.yaml" \
+        cmd: >
+          bash generate_templates.sh
+            "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/run-command.sh"
+            "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
             "{{ hibench_dir }}/hibench-spark-app.yaml"
         chdir: "{{ hibench_dir }}"
-      loop: "{{ workloads | dict2items }}"
+      loop: "{{ workloads }}"
       when: item.enabled

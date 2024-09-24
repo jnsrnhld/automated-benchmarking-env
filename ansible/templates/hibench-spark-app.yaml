@@ -1,17 +1,22 @@
 apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
+metadata:
+  name: {{ name }}
 spec:
   type: Scala
   mode: cluster
-  image: "spark:{{ spark_version }}"
+  image: "bitnami/spark:{{ spark_version }}"
   imagePullPolicy: Always
   mainClass: "{{ hibench_main_class }}"
   mainApplicationFile: "{{ hibench_jar }}"
-  arguments: {{ arguments }}
+  arguments:
+    {% for argument in arguments -%}
+    - "{{ argument }}"
+    {% endfor %}
   sparkVersion: {{ spark_version }}
   sparkUIOptions:
     serviceLabels:
-      test-label/v1: 'true'
+      test-label/v1: "true"
   restartPolicy:
     type: Never
   volumes:
@@ -20,8 +25,6 @@ spec:
         path: "/tmp"
         type: Directory
   driver:
-    coreRequest: "250m"
-    memory: "512m"
     labels:
       version: {{ spark_version }}
     serviceAccount: spark-operator-spark
@@ -29,8 +32,6 @@ spec:
       - name: "test-volume"
         mountPath: "/tmp"
   executor:
-    coreRequest: "250m"
-    memory: "512m"
     labels:
       version: {{ spark_version }}
     volumeMounts:
@@ -38,6 +39,6 @@ spec:
         mountPath: "/tmp"
   deps:
     jars:
-      - "{{ hdfs_address }}/{{ listener_jar }}"
+      - "{{ listener_jar }}"
   sparkConf:
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"

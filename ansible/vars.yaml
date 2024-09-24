@@ -11,7 +11,6 @@ scala_version: "2.12.20" # same for scala, and these versions directly correlate
 # HiBench related versions
 hadoop_version: "3.2.4"
 hibench_version: "827c9f6" # earlier commits do not support Spark 3 and there is no tagged release for version 8
-hibench_artifact_version: "8.0-SNAPSHOT"
 spark_hibench_profile: "3.1"
 scala_hibench_profile: "2.12"
 
@@ -37,25 +36,15 @@ mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 
 # HDFS
-hdfs_cluster_name: "hdfs-cluster"
-hdfs_address: "hdfs://listener-{{ hdfs_cluster_name }}-namenode-default-0:8020" # "hdfs://localhost:9000"
-hdfs_replication_factor: 1 # should be <= data_node_replicas
-data_node_replicas: 1
-name_node_replicas: 2 # < 2 nodes require disabling shared_edits_dir in ansible/charts/hdfs-cluster.yaml
-journal_node_replicas: 1
-zookeeper_replicas: 1
-# HDFS resources
-hdfs_datanode_capacity: "45Gi"
-zookeeper_cpu_limit: "400m" # recommended is 800m
-hdfs_datanode_cpu_limit: "200m" # recommended is 400m
-hdfs_namenode_cpu_limit: "500m" # recommended is 1000m
-hdfs_journalnode_cpu_limit: "400m" # recommended is 400m
+hdfs_address: "hdfs://{{ leader_hostname }}:9000" # leader_hostname must be set dynamically in the respective task
+hdfs_replication_factor: 1
 
 # local paths
 working_dir: "{{ lookup('env', 'PWD') }}"
 ansible_dir: "{{ working_dir }}/ansible"
 local_template_dir: "{{ ansible_dir }}/templates"
 hibench_template_dir: "{{ local_template_dir }}/hibench"
+hadoop_template_dir: "{{ local_template_dir }}/hadoop"
 local_scripts_dir: "{{ ansible_dir }}/scripts"
 
 # remote paths
@@ -64,4 +53,5 @@ venv_path: "{{ user_dir }}/venv"
 remote_template_dir: "{{ user_dir }}/templates"
 hadoop_dir: "{{ user_dir }}/hadoop"
 hibench_dir: "{{ user_dir }}/hibench"
-maven_cache_download_plugin_dir: "{{ user_dir }}/.m2/repository/cache/maven-download-plugin"
+archives_dir: "{{ user_dir }}/archives"
+hdfs_user_dir: "/user/{{ linux_username }}"

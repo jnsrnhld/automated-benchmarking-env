@@ -8,33 +8,6 @@
   become: true
   ignore_errors: true
   tasks:
-    - name: Remove Zookeeper chart
-      kubernetes.core.k8s:
-        name: zookeeper
-        api_version: zookeeper.stackable.tech/v1alpha1
-        kind: ZookeeperCluster
-        namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove Zookeeper ZNode chart
-      kubernetes.core.k8s:
-        name: hdfs-znode
-        api_version: zookeeper.stackable.tech/v1alpha1
-        kind: ZookeeperZnode
-        namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove HDFS chart
-      kubernetes.core.k8s:
-        name: "{{ hdfs_cluster_name }}"
-        api_version: hdfs.stackable.tech/v1alpha1
-        kind: HdfsCluster
-        namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
     - name: Remove spark-operator helm chart
       kubernetes.core.helm:
         name: spark-operator
@@ -54,46 +27,6 @@
         state: absent
         wait: true
 
-    - name: Remove Zookeeper operator helm chart
-      kubernetes.core.helm:
-        name: zookeeper-operator
-        release_namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove HDFS operator helm chart
-      kubernetes.core.helm:
-        name: hdfs-operator
-        release_namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove Commons operator helm chart
-      kubernetes.core.helm:
-        name: commons-operator
-        release_namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove Secret operator helm chart
-      kubernetes.core.helm:
-        name: secret-operator
-        release_namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove Listener operator helm chart
-      kubernetes.core.helm:
-        name: listener-operator
-        release_namespace: "{{ k8s_namespace }}"
-        state: absent
-        wait: true
-
-    - name: Remove stackable-stable repository
-      kubernetes.core.helm_repository:
-        name: stackable-stable
-        state: absent
-
 - name: Remove bind-mount directories for PersistentVolumes on all nodes
   hosts: remote
   become: true
@@ -106,50 +39,17 @@
         state: unmounted
       loop: "{{ range(1, replica_count + 1) }}"
 
-    - name: Unmount zookeeper directories
-      ansible.posix.mount:
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: unmounted
-
-    - name: Unmount hdfs directories
-      ansible.posix.mount:
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: unmounted
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
     - name: Remove mongodb data source directory
       file:
         path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
         state: absent
       loop: "{{ range(1, replica_count + 1) }}"
 
-    - name: Remove Zookeeper data source directory
-      file:
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: absent
-
-    - name: Remove HDFS data source directory
-      file:
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: absent
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
     - name: Remove mongodb data target directory
       file:
         path: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
         state: absent
       loop: "{{ range(1, replica_count + 1) }}"
-
-    - name: Remove Zookeeper data target directory
-      file:
-        path: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: absent
-
-    - name: Remove HDFS data target directory
-      file:
-        path: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: absent
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
 
 - name: Delete pending SparkApplications
   hosts: leader
@@ -158,6 +58,7 @@
   vars:
     ansible_python_interpreter: "{{ venv_path }}/bin/python3"
   become: true
+  ignore_errors: true
   tasks:
     - name: Retrieve all SparkApplications in the namespace
       kubernetes.core.k8s_info:

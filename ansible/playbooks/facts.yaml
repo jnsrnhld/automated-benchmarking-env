@@ -71,24 +71,12 @@
       become: true
       delegate_to: localhost
 
-    - name: Retrieve HDFS NodePort details
-      vars:
-        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-      k8s_info:
-        api_version: v1
-        kind: Service
-        namespace: "{{ k8s_namespace }}"
-        name: "listener-{{ hdfs_cluster_name }}-namenode-default-0"
-      register: nodeport_info
-
-    - name: Extract specific HTTP NodePort external port
-      set_fact:
-        hdfs_port: "{{ nodeport_info.resources[0].spec.ports | selectattr('name', 'equalto', 'http') | first | json_query('nodePort') }}"
-
     - name: Print infos
+      vars:
+        leader_hostname: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
       debug:
         msg:
           - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}"
           - "KUBECONFIG: {{ lookup('env', 'PWD') }}/.kubeconfig"
           - "MONGODB_CONNECTION_STRING: {{ MONGODB_CONNECTION_STRING }}"
-          - "HDFS_CONNECTION_STRING: http://{{ leader_ip }}:{{ hdfs_port }}"
+          - "HDFS_CONNECTION_STRING: {{  }}"

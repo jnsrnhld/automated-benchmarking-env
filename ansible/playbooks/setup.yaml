@@ -1,5 +1,5 @@
 ---
-- name: Add a new user with sudo privileges
+- name: Setup user on remote machines
   hosts: remote
   vars_files:
     - ../vars.yaml
@@ -24,21 +24,18 @@
         line: '%{{ linux_username }} ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
 
-    - name: Create hdfs user group
-      group:
-        name: hdfs
-        state: present
-
-    - name: Add user to hdfs group
-      user:
-        name: "{{ linux_username }}"
-        groups: hdfs
-        append: yes
-
     - name: Install acl to fix a tmp-file creation issue when running ansible tasks as non-root user
       apt:
         name: acl
         state: present
+
+    - name:
+      file:
+        path: "{{ remote_template_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
 
 - name: Install Ansible/pip dependencies on leader machine
   hosts: leader
@@ -155,111 +152,6 @@
       when: helm_installed.failed
       become: true
 
-# to be on the save side and prevent any manual managing effort, we'll create more PV then actually required
-- name: Create bind-mount directories for PersistentVolumes on all nodes
-  hosts: remote
-  become: true
-  vars_files:
-    - ../vars.yaml
-  tasks:
-    - name: Create MongoDB directory
-      file:
-        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, replica_count + 1) }}"
-
-    - name: Create Zookeeper data source directory if it does not exist
-      file:
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-
-    - name: Create HDFS data source directory if it does not exist
-      file:
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-    - name: Create MongoDB target directory if it does not exist
-      file:
-        path: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, replica_count + 1) }}"
-
-    - name: Create Zookeeper data target directory if it does not exist
-      file:
-        path: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
-        state: directory
-        mode: '0755'
-
-    - name: Create HDFS data target directory if it does not exist
-      file:
-        path: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-    - name: Bind mount MongoDB directories
-      ansible.posix.mount:
-        src: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
-        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
-        fstype: none
-        opts: bind
-        state: mounted
-      loop: "{{ range(1, replica_count + 1) }}"
-
-    - name: Bind mount zookeeper directories
-      ansible.posix.mount:
-        src: "{{ user_dir }}/zookeeper-data-{{ ansible_hostname | lower }}"
-        path: "/mnt/disks/zookeeper-data-{{ ansible_hostname | lower }}"
-        fstype: none
-        opts: bind
-        state: mounted
-
-    - name: Bind mount hdfs directories
-      ansible.posix.mount:
-        src: "{{ user_dir }}/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        path: "/mnt/disks/hdfs-data-{{ ansible_hostname | lower }}-{{ item }}"
-        fstype: none
-        opts: bind
-        state: mounted
-      loop: "{{ range(1, data_node_replicas + name_node_replicas + journal_node_replicas + 1) }}"
-
-- name: Template HDFS cluster charts
-  hosts: leader
-  vars_files:
-    - ../vars.yaml
-  become: true
-  tasks:
-    - name: Create a temporary directory for templating
-      file:
-        path: "{{ remote_template_dir }}"
-        state: directory
-        mode: '0755'
-
-    - name: Template the Zookeeper cluster file
-      template:
-        src: "{{ local_template_dir }}/zookeeper-cluster.yaml"
-        dest: "{{ remote_template_dir }}/zookeeper-cluster.yaml"
-
-    - name: Template the Zookeeper ZNode file
-      template:
-        src: "{{ local_template_dir }}/zookeeper-znode.yaml"
-        dest: "{{ remote_template_dir }}/zookeeper-znode.yaml"
-
-    - name: Template the HDFS cluster file
-      template:
-        src: "{{ local_template_dir }}/hdfs-cluster.yaml"
-        dest: "{{ remote_template_dir }}/hdfs-cluster.yaml"
-
-    - name: Copy webhdfs.yaml to leader
-      template:
-        src: "{{ local_template_dir }}/webhdfs.yaml"
-        dest: "{{ remote_template_dir }}/webhdfs.yaml"
-
 - name: Deploy spark-operator helm chart
   hosts: leader
   vars_files:
@@ -286,6 +178,33 @@
     - ../vars.yaml
   become: true
   tasks:
+    # to be on the save side and prevent any manual managing effort,
+    # we'll create more persistent volumes than actually required
+    - name: Create MongoDB directory
+      file:
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Create MongoDB target directory if it does not exist
+      file:
+        path: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+      loop: "{{ range(1, replica_count + 1) }}"
+
+    - name: Bind mount MongoDB directories
+      ansible.posix.mount:
+        src: "{{ user_dir }}/mongodb-data-{{ ansible_hostname | lower }}"
+        path: "/mnt/disks/mongodb-data-{{ ansible_hostname | lower }}"
+        fstype: none
+        opts: bind
+        state: mounted
+      loop: "{{ range(1, replica_count + 1) }}"
+
     - name: Deploy mongodb helm chart
       kubernetes.core.helm:
         name: mongodb
@@ -311,193 +230,8 @@
           arbiter:
             resourcesPreset: "{{ mongodb_resource_preset }}"
 
-- name: Install HDFS Operator's
-  hosts: leader
-  vars_files:
-    - ../vars.yaml
-  vars:
-    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: true
-  become_user: root
-  tasks:
-    - name: Add stackable-stable repository
-      kubernetes.core.helm_repository:
-        name: stackable-stable
-        repo_url: https://repo.stackable.tech/repository/helm-stable/
-
-    - name: Deploy Zookeeper operator helm chart
-      kubernetes.core.helm:
-        name: zookeeper-operator
-        chart_ref: stackable-stable/zookeeper-operator
-        chart_version: "{{ stackable_operator_version }}"
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
-        wait: true
-
-    - name: Deploy HDFS operator helm chart
-      kubernetes.core.helm:
-        name: hdfs-operator
-        chart_ref: stackable-stable/hdfs-operator
-        chart_version: "{{ stackable_operator_version }}"
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
-        wait: true
-
-    - name: Deploy Commons operator helm chart
-      kubernetes.core.helm:
-        name: commons-operator
-        chart_ref: stackable-stable/commons-operator
-        chart_version: "{{ stackable_operator_version }}"
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
-        wait: true
-
-    - name: Deploy Secret operator helm chart
-      kubernetes.core.helm:
-        name: secret-operator
-        chart_ref: stackable-stable/secret-operator
-        chart_version: "{{ stackable_operator_version }}"
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
-        wait: true
-
-    - name: Deploy Listener operator helm chart
-      kubernetes.core.helm:
-        name: listener-operator
-        chart_ref: stackable-stable/listener-operator
-        chart_version: "{{ stackable_operator_version }}"
-        release_namespace: "{{ k8s_namespace }}"
-        atomic: true
-        wait: true
-
-- name: Deploy HDFS cluster charts
-  hosts: leader
-  vars_files:
-    - ../vars.yaml
-  vars:
-    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: true
-  tasks:
-    - name: Deploy Zookeeper chart
-      kubernetes.core.k8s:
-        name: zookeeper
-        src: "{{ remote_template_dir }}/zookeeper-cluster.yaml"
-        namespace: "{{ k8s_namespace }}"
-        state: present
-        wait: true
-
-    - name: Deploy Zookeeper ZNode chart
-      kubernetes.core.k8s:
-        name: zookeeper-znode
-        src: "{{ remote_template_dir }}/zookeeper-znode.yaml"
-        namespace: "{{ k8s_namespace }}"
-        state: present
-        wait: true
-
-    - name: Deploy HDFS chart
-      kubernetes.core.k8s:
-        name: hdfs
-        src: "{{ remote_template_dir }}/hdfs-cluster.yaml"
-        namespace: "{{ k8s_namespace }}"
-        state: present
-        wait: true
-
-    - name: Deploy WebHDFS application
-      kubernetes.core.k8s:
-        name: webhdfs
-        namespace: "{{ k8s_namespace }}"
-        src: "{{ remote_template_dir }}/webhdfs.yaml"
-        state: present
-        wait: true
-
-- name: Wait for HDFS to be ready
-  hosts: leader
-  vars_files:
-    - ../vars.yaml
-  vars:
-    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  become: true
-  tasks:
-    - name: Verify HDFS NameNode pods are ready
-      k8s_info:
-        namespace: "{{ k8s_namespace }}"
-        kind: Pod
-        label_selectors:
-          - 'role=namenode'
-      register: namenode_pods
-      retries: 30
-      delay: 10
-      until: namenode_pods.resources | map(attribute='status.containerStatuses') | map('map', attribute='ready') | flatten | reject('equalto', true) | list | length == 0
-
-    - name: Verify HDFS DataNode pods are ready
-      k8s_info:
-        namespace: "{{ k8s_namespace }}"
-        kind: Pod
-        label_selectors:
-          - 'role=datanode'
-      register: datanode_pods
-      retries: 30
-      delay: 10
-      until: datanode_pods.resources | map(attribute='status.containerStatuses') | map('map', attribute='ready') | flatten | reject('equalto', true) | list | length == 0
-
-- name: Copy custom SparkListener to HDFS
-  hosts: leader
-  become: true
-  vars_files:
-    - ../vars.yaml
-  vars:
-    ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-  tasks:
-    - name: Copy the JAR file to remote machine
-      synchronize:
-        src: "{{ lookup('env', 'PWD') }}/ansible/jars/{{ listener_jar }}"
-        dest: "/tmp/{{ listener_jar }}"
-        delete: yes
-
-    - name: Copy jar local file to webhdfs pod
-      kubernetes.core.k8s_cp:
-        namespace: "{{ k8s_namespace }}"
-        pod: webhdfs-0
-        local_path: "/tmp/{{ listener_jar }}"
-        remote_path: "/tmp/{{ listener_jar }}"
-
-    - name: Issue initial PUT command to create file in HDFS
-      kubernetes.core.k8s_exec:
-        namespace: "{{ k8s_namespace }}"
-        pod: webhdfs-0
-        command: "curl -s -XPUT -T /tmp/{{ listener_jar }} \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/{{ listener_jar }}?user.name=stackable&op=CREATE&noredirect=true\""
-      register: put_result
-
-    - name: Extract location URL from PUT response
-      set_fact:
-        location_url: "{{ put_result.stdout | from_json() | json_query('Location') }}"
-
-    - name: Issue second PUT command to complete file creation
-      kubernetes.core.k8s_exec:
-        namespace: "{{ k8s_namespace }}"
-        pod: webhdfs-0
-        command: "curl -s -XPUT -T /tmp/{{ listener_jar }} {{ location_url }}"
-
-    - name: Recheck status to verify file creation
-      kubernetes.core.k8s_exec:
-        namespace: "{{ k8s_namespace }}"
-        pod: webhdfs-0
-        command: "curl -s -XGET \"http://{{ hdfs_cluster_name }}-namenode-default-0.{{ hdfs_cluster_name }}-namenode-default.default.svc.cluster.local:9870/webhdfs/v1/?op=LISTSTATUS\""
-      register: status_result
-
-    - name: Parse status_result stdout as JSON
-      set_fact:
-        file_status: "{{ status_result.stdout | from_json }}"
-
-    - name: Verify the file_status contains the created file
-      assert:
-        that:
-          - file_status.FileStatuses.FileStatus | length > 0
-          - file_status.FileStatuses.FileStatus[0].pathSuffix == "{{ listener_jar }}"
-          - file_status.FileStatuses.FileStatus[0].length > 0
-
-- name: Prepare HiBench
-  hosts: leader
+- name: Deploy Hadoop
+  hosts: remote
   vars_files:
     - ../vars.yaml
   become: true
@@ -576,7 +310,19 @@
             owner: "{{ linux_username }}"
             group: "{{ linux_username }}"
 
+        - name: Create hdfs user group
+          group:
+            name: hdfs
+            state: present
+
+        - name: Add user to hdfs group
+          user:
+            name: "{{ linux_username }}"
+            groups: hdfs
+            append: yes
+
     - name: Setup Hadoop
+      become_user: "{{ linux_username }}"
       block:
         - name: Download Hadoop tarball
           get_url:
@@ -610,18 +356,15 @@
 
         - name: Template *-site.xml files
           template:
-            src: "{{ hibench_template_dir }}/{{ item }}"
+            src: "{{ hadoop_template_dir }}/{{ item }}"
             dest: "{{ hadoop_dir }}/etc/hadoop/{{ item }}"
+          vars:
+            leader_hostname: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
           loop:
             - core-site.xml
             - hdfs-site.xml
             - mapred-site.xml
             - yarn-site.xml
-
-        - name: Template setup script
-          template:
-            src: "{{ hibench_template_dir }}/start-deamons.sh"
-            dest: "{{ hadoop_dir }}/start-deamons.sh"
 
         - name: Ensure hadoop logs directory has correct permissions
           file:
@@ -631,55 +374,113 @@
             mode: '0755'
             state: directory
 
-        - name: Template setup script
-          template:
-            src: "{{ hibench_template_dir }}/start-deamons.sh"
-            dest: "{{ hadoop_dir }}/start-deamons.sh"
+- name: Start HDFS namenode/resourcemanager
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: true
+  become_user: "{{ linux_username }}"
+  tasks:
+    - name:
+      shell:
+        cmd: | 
+          # ansible is not sourcing .bashrc
+          export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
+          export PATH=$JAVA_HOME/bin:$PATH
+          export PDSH_RCMD_TYPE=ssh
+  
+          # stopping services
+          bin/hdfs --daemon stop namenode
+          bin/yarn --daemon stop resourcemanager
+          sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
+  
+          # starting services
+          bin/hdfs namenode -format
+          bin/hdfs --daemon start namenode
+          bin/yarn --daemon start resourcemanager
+        chdir: "{{ hadoop_dir }}"
 
-        - name: Start HDFS and YARN
-          become_user: "{{ linux_username }}"
-          command: "bash {{ hadoop_dir }}/start-deamons.sh"
+    - name: Run jps and capture the output
+      command: jps
+      register: jps_output
 
-        - name: Run jps and capture the output
-          command: jps
-          register: jps_output
+    - name: Verify that all required JVM processes are running
+      assert:
+        that:
+          - "'NameNode' in jps_output.stdout"
+          - "'ResourceManager' in jps_output.stdout"
+        fail_msg: "One or more required JVM processes are not running. Output was {{ jps_output.stdout }}"
+        success_msg: "All required JVM processes are running"
 
-        - name: Verify that all required JVM processes are running
-          assert:
-            that:
-              - "'NodeManager' in jps_output.stdout"
-              - "'ResourceManager' in jps_output.stdout"
-            fail_msg: "One or more required JVM processes are not running"
-            success_msg: "All required JVM processes are running"
+- name: Start HDFS datanode/nodemanager
+  hosts: follower
+  vars_files:
+    - ../vars.yaml
+  become: true
+  become_user: "{{ linux_username }}"
+  tasks:
+    - name:
+      shell:
+        cmd: |
+          # ansible is not sourcing .bashrc
+          export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
+          export PATH=$JAVA_HOME/bin:$PATH
+          export PDSH_RCMD_TYPE=ssh
+  
+          # stopping services
+          bin/hdfs --daemon stop datanode
+          bin/yarn --daemon stop nodemanager
+          sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
+  
+          # starting services
+          bin/hdfs namenode -format
+          bin/hdfs --daemon start datanode
+          bin/yarn --daemon start nodemanager
+        chdir: "{{ hadoop_dir }}"
 
-    - name: Setup HiBench repo
+    - name: Run jps and capture the output
+      command: jps
+      register: jps_output
+
+    - name: Verify that all required JVM processes are running
+      assert:
+        that:
+          - "'DataNode' in jps_output.stdout"
+          - "'NodeManager' in jps_output.stdout"
+        fail_msg: "One or more required JVM processes are not running. Output was {{ jps_output.stdout }}"
+        success_msg: "All required JVM processes are running"
+
+- name: Copy custom SparkListener to HDFS
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: true
+  become_user: "{{ linux_username }}"
+  tasks:
+    - name: Copy the JAR file to remote machine
+      synchronize:
+        src: "{{ lookup('env', 'PWD') }}/ansible/jars/{{ listener_jar }}"
+        dest: "/tmp/{{ listener_jar }}"
+        delete: yes
+
+    - name: Create user dir in hdfs
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -mkdir -p {{ hdfs_user_dir }}"
+
+    - name: Copy jar to user dir
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f /tmp/{{ listener_jar }} {{ hdfs_user_dir }}"
+
+- name: Deploy HiBench
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: true
+  become_user: "{{ linux_username }}"
+  tasks:
+    - name: Provide cached archives to speed up HiBench build
       block:
-        - name: Remove the existing repository if present
+        - name: Ensure archives dir exists
           file:
-            path: "{{ hibench_dir }}"
-            state: absent
-
-        - name: Create directory for HiBench
-          file:
-            path: "{{ hibench_dir }}"
-            state: directory
-            mode: '0755'
-            owner: "{{ linux_username }}"
-            group: "{{ linux_username }}"
-            recurse: yes
-
-        - name: Pull HiBench repository
-          become_user: "{{ linux_username }}" # otherwise we get ownership issues
-          git:
-            repo: https://github.com/Intel-bigdata/HiBench.git
-            dest: "{{ hibench_dir }}"
-            version: "{{ hibench_version }}"
-            force: yes
-            update: yes
-
-        - name: Ensure maven cache exists
-          file:
-            path: "{{ maven_cache_download_plugin_dir }}"
+            path: "{{ archives_dir }}"
             state: directory
             owner: "{{ linux_username }}"
             group: "{{ linux_username }}"
@@ -688,37 +489,64 @@
         - name: Add maven archives to cache
           synchronize:
             src: "{{ lookup('env', 'PWD') }}/.m2.repository.cache.maven-download-plugin"
-            dest: "{{ maven_cache_download_plugin_dir }}"
+            dest: "{{ archives_dir }}"
             recursive: true
 
-        - name: Build HiBench (This might take ~1h initially because there are artifacts downloaded with several 100 MB)
-          shell:
-            cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
-            chdir: "{{ hibench_dir }}"
-
-        - name: Copy SparApp template
-          copy:
-            src: "{{ local_template_dir }}/hibench-spark-app.yaml"
-            dest: "{{ hibench_dir }}"
-            owner: "{{ linux_username }}"
-            group: "{{ linux_username }}"
-            mode: '0644'
-
-        - name: Copy scripts to HiBench dir
-          copy:
-            src: "{{ local_scripts_dir }}/{{ item }}"
-            dest: "{{ hibench_dir }}"
-            owner: "{{ linux_username }}"
-            group: "{{ linux_username }}"
-            mode: '0644'
+        - name: Template adjusted pom.xml files
+          template:
+            src: "{{hibench_template_dir}}/{{ item.template }}"
+            dest: "{{ hibench_dir}}/{{ item.path }}"
           loop:
-            - generate_templates.sh
-            - run_script_modifier.py
-            - sparkapp-templater.py
+            - { path: "hadoopbench/mahout/pom.xml", template: "mahout.pom.xml" }
+            - { path: "hadoopbench/sql/pom.xml", template: "sql.pom.xml" }
+            - { path: "hadoopbench/nutchindexing/pom.xml", template: "nutch.pom.xml" }
 
-        - name: Execute run_script_modifier.py
-          vars:
-            ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-          command:
-            cmd: "python3 run_script_modifier.py {{ hibench_dir }}"
-            chdir: "{{ hibench_dir }}"
+    - name: Create directory for HiBench
+      file:
+        path: "{{ hibench_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        recurse: yes
+
+    - name: Pull HiBench repository
+      become_user: "{{ linux_username }}" # otherwise we get ownership issues
+      git:
+        repo: https://github.com/Intel-bigdata/HiBench.git
+        dest: "{{ hibench_dir }}"
+        version: "{{ hibench_version }}"
+        force: yes
+        update: yes
+
+    - name: Build HiBench
+      shell:
+        cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
+        chdir: "{{ hibench_dir }}"
+
+    - name: Copy SparApp template
+      copy:
+        src: "{{ local_template_dir }}/hibench-spark-app.yaml"
+        dest: "{{ hibench_dir }}"
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        mode: '0644'
+
+    - name: Copy scripts to HiBench dir
+      copy:
+        src: "{{ local_scripts_dir }}/{{ item }}"
+        dest: "{{ hibench_dir }}"
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        mode: '0644'
+      loop:
+        - generate_templates.sh
+        - run_script_modifier.py
+        - sparkapp-templater.py
+
+    - name: Execute run_script_modifier.py
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      command:
+        cmd: "python3 run_script_modifier.py {{ hibench_dir }}"
+        chdir: "{{ hibench_dir }}"

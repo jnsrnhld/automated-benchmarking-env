@@ -1,3 +1,4 @@
+import re
 import yaml
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
@@ -13,7 +14,11 @@ def parse_input_string(input_string: str) -> dict:
     Returns:
         dict: Dictionary with `main_class` and `arguments` keys.
     """
-    parts = input_string.split()
+
+    # the prepare.sh script might echo other stuff that we discard
+    trimmed = re.search(r'com\.intel\.hibench.*', input_string).group(0)
+
+    parts = trimmed.split()
     main_class = parts[0]
     arguments = parts[1:]
     return {

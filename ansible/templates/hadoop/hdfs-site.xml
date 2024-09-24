@@ -3,4 +3,8 @@
         <name>dfs.replication</name>
         <value>{{ hdfs_replication_factor }}</value>
     </property>
+    <property>
+        <name>dfs.permissions.superusergroup</name>
+        <value>hdfs</value>
+    </property>
 </configuration>
