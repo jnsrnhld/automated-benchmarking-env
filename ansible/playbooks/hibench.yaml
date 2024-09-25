@@ -5,7 +5,7 @@
     - ../vars.yaml
     - ../benchmark-definition.yaml
   vars:
-    leader_hostname: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
+    leader_ip: "{{ hostvars['leaderNode']['ip'] }}"
   become: true
   become_user: "{{ linux_username }}"
   tasks:
@@ -25,12 +25,24 @@
       copy:
         src: "{{ remote_template_dir }}/hibench.conf"
         dest: "{{ hibench_dir }}/conf/hibench.conf"
-        remote_src: yes
+        remote_src: true
 
     - name: Template Spark config
       template:
         src: "{{ hibench_template_dir }}/spark.conf"
         dest: "{{ hibench_dir }}/conf/spark.conf"
+
+    - name: Delete existing ConfigMap
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      kubernetes.core.k8s:
+        kind: ConfigMap
+        name: hibench-config
+        namespace: "{{ k8s_namespace }}"
+        state: absent
+
+    - name: Deploy HiBench config as ConfigMap
+      command: 'kubectl create configmap hibench-config --from-file="{{hibench_dir }}/conf/hibench.conf"'
 
     - name: Run prepare script
       become_user: "{{ linux_username }}"
@@ -38,19 +50,32 @@
       loop: "{{ workloads }}"
       when: item.enabled
 
-    - name: Upload jars
-      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{ hibench_dir }}/{{ item.value.dir }}/{{ item.value.file }} {{ hdfs_user_dir }}"
-      loop: "{{ jars | dict2items }}"
+    - name: Copy necessary files to HDFS
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{item}} {{ hdfs_user_dir }}"
+      loop:
+        - "{{ hibench_dir }}/sparkbench/assembly/target/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
+
+    - name: Register linux user id
+      shell: "id -u {{ linux_username }}"
+      register: linux_user_id
+
+    - name: Register hdfs group id
+      shell: "getent group {{ hdfs_group }} | cut -d: -f3"
+      register: hdfs_group_id
 
     - name: Prepare templater dict
       vars:
+        hibench_jar: "{{ hdfs_address }}{{ hdfs_user_dir }}/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
         lister_jar_full_path: "{{ hdfs_address }}{{ hdfs_user_dir }}/{{ listener_jar }}"
       copy:
         dest: "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
         content: |
+          linux_user_id: {{ linux_user_id.stdout }}
+          hdfs_group_id: {{ hdfs_group_id.stdout }}
           name: {{ item.name }}
+          spark_image: {{ spark_image }}
           spark_version: {{ spark_version }}
-          hibench_jar: {{ hdfs_address }}{{ hdfs_user_dir }}/{{ lookup('vars', 'jars')[item.category]['file'] }}
+          hibench_jar: {{ hibench_jar }}
           listener_jar: {{ lister_jar_full_path }}
       loop: "{{ workloads }}"
       when: item.enabled
@@ -63,5 +88,11 @@
             "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
             "{{ hibench_dir }}/hibench-spark-app.yaml"
         chdir: "{{ hibench_dir }}"
+      loop: "{{ workloads }}"
+      when: item.enabled
+
+    - name: Print user info on how to run the benchmarks
+      debug:
+        msg: "kubectl apply -f {{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/spark-app.yaml"
       loop: "{{ workloads }}"
       when: item.enabled

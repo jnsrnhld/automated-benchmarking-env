@@ -3,14 +3,13 @@ java_version: "8"
 helm_version: "3.15.1"
 spark_operator_version: "1.4.6"
 mongo_db_chart_version: "15.6.14"
-stackable_operator_version: "24.3.0"
-zookeeper_version: "3.8.4"
+# HiBench/Spark related versions (No support after Spark#3.1.1 as of oktober 2024)
 hdfs_version: "3.3.4"
-spark_version: "3.1.1" # HiBench does not support later versions as of September 2024
-scala_version: "2.12.20" # same for scala, and these versions directly correlate with the hibench_profile
-# HiBench related versions
+spark_version: "3.1.1"
+spark_image: "apache/spark:v3.1.3" # No public available 3.1.1 image found as of oktober 2024
+scala_version: "2.12.20"
 hadoop_version: "3.2.4"
-hibench_version: "827c9f6" # earlier commits do not support Spark 3 and there is no tagged release for version 8
+hibench_version: "827c9f6"
 spark_hibench_profile: "3.1"
 scala_hibench_profile: "2.12"
 
@@ -20,10 +19,10 @@ listener_jar: "listener_2.12-0.1.0-SNAPSHOT.jar"
 # this user can be used for ansible scripts and experiment execution
 linux_username: "mtuser"
 linux_password: "Admin1!"
+hdfs_group: "hdfs"
 
 # Kubernetes
 k8s_namespace: "default"
-persistent_volume_per_node: "45Gi"
 storage_class: "local-storage"
 
 # MongoDB
@@ -36,7 +35,7 @@ mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 
 # HDFS
-hdfs_address: "hdfs://{{ leader_hostname }}:9000" # leader_hostname must be set dynamically in the respective task
+hdfs_address: "hdfs://{{ leader_ip }}:9000" # leader_ip must be set dynamically in the respective task
 hdfs_replication_factor: 1
 
 # local paths

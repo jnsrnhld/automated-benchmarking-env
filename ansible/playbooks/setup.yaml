@@ -171,6 +171,9 @@
         release_namespace: "{{ k8s_namespace }}"
         atomic: true
         wait: true
+        values:
+          webhook:
+            enable: true
 
 - name: Deploy MongoDB replica set
   hosts: leader
@@ -312,13 +315,13 @@
 
         - name: Create hdfs user group
           group:
-            name: hdfs
+            name: "{{ hdfs_group }}"
             state: present
 
         - name: Add user to hdfs group
           user:
             name: "{{ linux_username }}"
-            groups: hdfs
+            groups: "{{ hdfs_group }}"
             append: yes
 
     - name: Setup Hadoop
@@ -359,7 +362,7 @@
             src: "{{ hadoop_template_dir }}/{{ item }}"
             dest: "{{ hadoop_dir }}/etc/hadoop/{{ item }}"
           vars:
-            leader_hostname: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
+            leader_ip: "{{ hostvars['leaderNode']['ip'] }}"
           loop:
             - core-site.xml
             - hdfs-site.xml
@@ -476,31 +479,6 @@
   become: true
   become_user: "{{ linux_username }}"
   tasks:
-    - name: Provide cached archives to speed up HiBench build
-      block:
-        - name: Ensure archives dir exists
-          file:
-            path: "{{ archives_dir }}"
-            state: directory
-            owner: "{{ linux_username }}"
-            group: "{{ linux_username }}"
-            mode: '0755'
-
-        - name: Add maven archives to cache
-          synchronize:
-            src: "{{ lookup('env', 'PWD') }}/.m2.repository.cache.maven-download-plugin"
-            dest: "{{ archives_dir }}"
-            recursive: true
-
-        - name: Template adjusted pom.xml files
-          template:
-            src: "{{hibench_template_dir}}/{{ item.template }}"
-            dest: "{{ hibench_dir}}/{{ item.path }}"
-          loop:
-            - { path: "hadoopbench/mahout/pom.xml", template: "mahout.pom.xml" }
-            - { path: "hadoopbench/sql/pom.xml", template: "sql.pom.xml" }
-            - { path: "hadoopbench/nutchindexing/pom.xml", template: "nutch.pom.xml" }
-
     - name: Create directory for HiBench
       file:
         path: "{{ hibench_dir }}"
@@ -518,6 +496,34 @@
         version: "{{ hibench_version }}"
         force: yes
         update: yes
+
+    - name: Provide cached archives to speed up HiBench build
+      block:
+        - name: Ensure archives dir exists
+          file:
+            path: "{{ archives_dir }}"
+            state: directory
+            owner: "{{ linux_username }}"
+            group: "{{ linux_username }}"
+            mode: '0755'
+
+        - name: Add maven archives to cache
+          synchronize:
+            src: "{{ lookup('env', 'PWD') }}/ansible/archives/{{ item }}"
+            dest: "{{ archives_dir }}"
+          loop:
+            - "apache-hive-3.0.0-bin.tar.gz"
+            - "apache-mahout-distribution-0.11.0.tar.gz"
+            - "apache-nutch-1.2-bin.tar.gz"
+
+        - name: Template adjusted pom.xml files
+          template:
+            src: "{{hibench_template_dir}}/{{ item.template }}"
+            dest: "{{ hibench_dir}}/{{ item.path }}"
+          loop:
+            - { path: "hadoopbench/mahout/pom.xml", template: "mahout.pom.xml" }
+            - { path: "hadoopbench/sql/pom.xml", template: "sql.pom.xml" }
+            - { path: "hadoopbench/nutchindexing/pom.xml", template: "nutch.pom.xml" }
 
     - name: Build HiBench
       shell:

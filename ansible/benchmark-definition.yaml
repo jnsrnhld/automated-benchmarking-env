@@ -3,16 +3,7 @@
 # i.e. https://github.com/Intel-bigdata/HiBench/blob/master/conf/workloads/micro/wordcount.conf
 scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
 
-# workload => jar map
-jars:
-  micro:
-    file: "sparkbench-micro-8.0-SNAPSHOT.jar"
-    dir: "sparkbench/micro/target"
-  ml:
-    file: "sparkbench-ml-8.0-SNAPSHOT.jar"
-    dir: "sparkbench/ml/target"
-
 # Which workloads do you want to run?
 workloads:
   - { name: "wordcount", enabled: true, category: "micro" }
-  - { name: "kmeans", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: true, category: "ml" }

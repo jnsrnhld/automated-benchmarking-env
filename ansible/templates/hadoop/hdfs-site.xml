@@ -4,7 +4,11 @@
         <value>{{ hdfs_replication_factor }}</value>
     </property>
     <property>
+        <name>dfs.permissions.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
         <name>dfs.permissions.superusergroup</name>
-        <value>hdfs</value>
+        <value>{{ hdfs_group }}</value>
     </property>
 </configuration>

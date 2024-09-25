@@ -5,40 +5,38 @@ metadata:
 spec:
   type: Scala
   mode: cluster
-  image: "bitnami/spark:{{ spark_version }}"
+  image: {{ spark_image }}
   imagePullPolicy: Always
-  mainClass: "{{ hibench_main_class }}"
-  mainApplicationFile: "{{ hibench_jar }}"
+  mainClass: {{ hibench_main_class }}
+  mainApplicationFile: {{ hibench_jar }}
   arguments:
     {% for argument in arguments -%}
     - "{{ argument }}"
     {% endfor %}
   sparkVersion: {{ spark_version }}
-  sparkUIOptions:
-    serviceLabels:
-      test-label/v1: "true"
   restartPolicy:
     type: Never
-  volumes:
-    - name: "test-volume"
-      hostPath:
-        path: "/tmp"
-        type: Directory
   driver:
     labels:
       version: {{ spark_version }}
     serviceAccount: spark-operator-spark
-    volumeMounts:
-      - name: "test-volume"
-        mountPath: "/tmp"
+    configMaps:
+      - name: hibench-config
+        path: /mnt/config-maps
+    env:
+      - name: SPARKBENCH_PROPERTIES_FILES
+        value: /mnt/config-maps/hibench.conf
   executor:
     labels:
       version: {{ spark_version }}
-    volumeMounts:
-      - name: "test-volume"
-        mountPath: "/tmp"
+    configMaps:
+      - name: hibench-config
+        path: /mnt/config-maps
+    env:
+      - name: SPARKBENCH_PROPERTIES_FILES
+        value: /mnt/config-maps/hibench.conf
   deps:
     jars:
-      - "{{ listener_jar }}"
+      - {{ listener_jar }}
   sparkConf:
-    "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
+    "spark.extraListeners": de.tu_berlin.jarnhold.listener.CentralizedSparkListener
