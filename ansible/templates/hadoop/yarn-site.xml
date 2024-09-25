@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>yarn.resourcemanager.hostname</name>
-        <value>{{ leader_ip }}</value>
+        <value>{{ hadoop_service }}</value>
     </property>
     <property>
         <name>yarn.nodemanager.aux-services</name>

@@ -72,11 +72,9 @@
       delegate_to: localhost
 
     - name: Print infos
-      vars:
-        leader_ip: "{{ hostvars['leaderNode']['ip'] }}"
       debug:
         msg:
           - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}"
           - "KUBECONFIG: {{ lookup('env', 'PWD') }}/.kubeconfig"
           - "MONGODB_CONNECTION_STRING: {{ MONGODB_CONNECTION_STRING }}"
-          - "HDFS_CONNECTION_STRING: {{  }}"
+          - "HDFS_CONNECTION_STRING: {{ hdfs_address }}"

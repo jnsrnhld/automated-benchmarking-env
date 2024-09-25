@@ -6,7 +6,7 @@ mongo_db_chart_version: "15.6.14"
 # HiBench/Spark related versions (No support after Spark#3.1.1 as of oktober 2024)
 hdfs_version: "3.3.4"
 spark_version: "3.1.1"
-spark_image: "apache/spark:v3.1.3" # No public available 3.1.1 image found as of oktober 2024
+spark_image: "jnsrnhld/spark"
 scala_version: "2.12.20"
 hadoop_version: "3.2.4"
 hibench_version: "827c9f6"
@@ -35,7 +35,8 @@ mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 
 # HDFS
-hdfs_address: "hdfs://{{ leader_ip }}:9000" # leader_ip must be set dynamically in the respective task
+hadoop_service: "hadoop-service"
+hdfs_address: "hdfs://{{ hadoop_service }}:9000"
 hdfs_replication_factor: 1
 
 # local paths

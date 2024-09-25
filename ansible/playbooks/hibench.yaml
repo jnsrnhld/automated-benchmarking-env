@@ -4,8 +4,6 @@
   vars_files:
     - ../vars.yaml
     - ../benchmark-definition.yaml
-  vars:
-    leader_ip: "{{ hostvars['leaderNode']['ip'] }}"
   become: true
   become_user: "{{ linux_username }}"
   tasks:
@@ -59,6 +57,7 @@
       shell: "id -u {{ linux_username }}"
       register: linux_user_id
 
+    # TODO remove?
     - name: Register hdfs group id
       shell: "getent group {{ hdfs_group }} | cut -d: -f3"
       register: hdfs_group_id

@@ -361,8 +361,6 @@
           template:
             src: "{{ hadoop_template_dir }}/{{ item }}"
             dest: "{{ hadoop_dir }}/etc/hadoop/{{ item }}"
-          vars:
-            leader_ip: "{{ hostvars['leaderNode']['ip'] }}"
           loop:
             - core-site.xml
             - hdfs-site.xml
@@ -453,6 +451,19 @@
         fail_msg: "One or more required JVM processes are not running. Output was {{ jps_output.stdout }}"
         success_msg: "All required JVM processes are running"
 
+    - name: Deploy Hadoop service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ hadoop_service }}"
+            namespace: "{{ k8s_namespace }}"
+          spec:
+            type: ExternalName
+            externalName: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
+
 - name: Copy custom SparkListener to HDFS
   hosts: leader
   vars_files:
@@ -510,7 +521,7 @@
         - name: Add maven archives to cache
           synchronize:
             src: "{{ lookup('env', 'PWD') }}/ansible/archives/{{ item }}"
-            dest: "{{ archives_dir }}"
+            dest: "{{ archives_dir }}">
           loop:
             - "apache-hive-3.0.0-bin.tar.gz"
             - "apache-mahout-distribution-0.11.0.tar.gz"
