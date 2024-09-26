@@ -47,7 +47,7 @@
         hibench_jar: "{{ hdfs_address }}{{ hdfs_user_dir }}/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
         lister_jar_full_path: "{{ hdfs_address }}{{ hdfs_user_dir }}/{{ listener_jar }}"
       copy:
-        dest: "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
+        dest: "{{ hibench_dir }}/values.yaml"
         content: |
           spark_image: {{ spark_image }}
           spark_version: {{ spark_version }}

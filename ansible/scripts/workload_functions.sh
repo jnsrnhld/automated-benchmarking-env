@@ -187,7 +187,7 @@ function dir_size() {
 # # # # # # # #
 
 function check_status() {
-    status=$(kubectl get sparkapplication "$resource_name" -o jsonpath='{.status.applicationState.state}')
+    status=$(kubectl get "$resource_name" -o jsonpath='{.status.applicationState.state}')
     echo "Current status: $status"
     if [ "$status" == "COMPLETED" ]; then
         return 0
@@ -203,13 +203,15 @@ function run_spark_job() {
 
     # generate SparkApplication template
     output_path="$(dirname "$(realpath "$0")")/spark-app.yaml"
-    values_path="$(dirname "$(realpath "$0")")/../values.yaml"
+    values_path="${HIBENCH_HOME}/values.yaml"
     main_class_with_arguments="$CLS $*"
     python3 ${HIBENCH_HOME}/sparkapp-templater.py "$main_class_with_arguments" "$values_path" "${HIBENCH_HOME}/hibench-spark-app.yaml" "$output_path"
 
     # submit the job to k8s
     echo -e "${BGreen}Submit Spark job $CLS with args $*"
     MONITOR_PID=`start_monitor`
+    # if the script has run before, the application might exist and we want to force a re-execution
+    kubectl delete -f "$output_path" --ignore-not-found
     output=$(kubectl apply -f "$output_path")
     resource_name=$(echo "$output" | awk '{print $1}')
 

@@ -382,7 +382,7 @@
   become: true
   become_user: "{{ linux_username }}"
   tasks:
-    - name:
+    - name: Start NameNode and ResourceManager on leader node
       shell:
         cmd: |
           # ansible is not sourcing .bashrc
@@ -420,7 +420,7 @@
   become: true
   become_user: "{{ linux_username }}"
   tasks:
-    - name:
+    - name: Start DataNode and NodeManager on follower nodes
       shell:
         cmd: |
           # ansible is not sourcing .bashrc
