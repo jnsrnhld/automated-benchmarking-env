@@ -182,6 +182,10 @@ function dir_size() {
     done
 }
 
+# # # # # # # #
+# PATCH START #
+# # # # # # # #
+
 function check_status() {
     status=$(kubectl get sparkapplication "$resource_name" -o jsonpath='{.status.applicationState.state}')
     echo "Current status: $status"
@@ -221,6 +225,10 @@ function run_spark_job() {
     done
     stop_monitor ${MONITOR_PID}
 }
+
+# # # # # # # #
+#  PATCH END  #
+# # # # # # # #
 
 function run_storm_job(){
     CMD="${STORM_HOME}/bin/storm jar ${STREAMBENCH_STORM_JAR} $@"
