@@ -541,6 +541,12 @@
         group: "{{ linux_username }}"
         mode: '0644'
 
+    - name: Add mapping for additional config variable
+      lineinfile:
+        path: "{{ hibench_dir }}/bin/functions/hibench_prop_env_mapping.py"
+        insertafter: "HiBenchEnvPropMappingMandatory=dict("
+        line: '\tKUBERNETES_NAMESPACE="{{ hibench.kubernetes.namespace }}",'
+
     - name: Copy scripts to HiBench dir
       copy:
         src: "{{ local_scripts_dir }}/{{ item.src }}"
