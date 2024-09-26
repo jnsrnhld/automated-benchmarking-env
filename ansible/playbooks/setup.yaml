@@ -384,17 +384,17 @@
   tasks:
     - name:
       shell:
-        cmd: | 
+        cmd: |
           # ansible is not sourcing .bashrc
           export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
           export PATH=$JAVA_HOME/bin:$PATH
           export PDSH_RCMD_TYPE=ssh
-  
+          
           # stopping services
           bin/hdfs --daemon stop namenode
           bin/yarn --daemon stop resourcemanager
           sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
-  
+          
           # starting services
           bin/hdfs namenode -format
           bin/hdfs --daemon start namenode
@@ -427,12 +427,12 @@
           export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
           export PATH=$JAVA_HOME/bin:$PATH
           export PDSH_RCMD_TYPE=ssh
-  
+          
           # stopping services
           bin/hdfs --daemon stop datanode
           bin/yarn --daemon stop nodemanager
           sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
-  
+          
           # starting services
           bin/hdfs namenode -format
           bin/hdfs --daemon start datanode
@@ -541,21 +541,18 @@
         group: "{{ linux_username }}"
         mode: '0644'
 
-    - name: Copy scripts to HiBench dir
+    - name: Copy templater script to HiBench dir
       copy:
-        src: "{{ local_scripts_dir }}/{{ item }}"
-        dest: "{{ hibench_dir }}"
+        src: "{{ local_scripts_dir }}/sparkapp-templater.py"
+        dest: "{{ hibench_dir }}/sparkapp-templater.py"
         owner: "{{ linux_username }}"
         group: "{{ linux_username }}"
         mode: '0644'
-      loop:
-        - generate_templates.sh
-        - run_script_modifier.py
-        - sparkapp-templater.py
 
-    - name: Execute run_script_modifier.py
-      vars:
-        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
-      command:
-        cmd: "python3 run_script_modifier.py {{ hibench_dir }}"
-        chdir: "{{ hibench_dir }}"
+    - name: Copy workload_functions.sh patch HiBench dir
+      copy:
+        src: "{{ hibench_template_dir }}/workload_functions.sh"
+        dest: "{{ hibench_dir }}/bin/functions/workload_functions.sh"
+        owner: "{{ linux_username }}"
+        group: "{{ linux_username }}"
+        mode: '0644'

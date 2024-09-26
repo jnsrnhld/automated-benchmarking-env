@@ -6,11 +6,12 @@ scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
 # Which workloads do you want to run?
 workloads:
   # MICRO
-  - { name: "repartition", enabled: true, category: "micro" }
-  - { name: "sleep", enabled: true, category: "micro" }
-  - { name: "sort", enabled: true, category: "micro" }
-  - { name: "terasort", enabled: true, category: "micro" }
-  - { name: "wordcount", enabled: true, category: "micro" }
+  - { name: "repartition", enabled: false, category: "micro" }
+  - { name: "sleep", enabled: false, category: "micro" }
+  - { name: "sort", enabled: false, category: "micro" }
+  - { name: "terasort", enabled: false, category: "micro" }
+  - { name: "wordcount", enabled: false, category: "micro" }
   # MACHINE LEARNING
-  - { name: "bayes", enabled: true, category: "ml" }
-  - { name: "kmeans", enabled: true, category: "ml" }
+  - { name: "als", enabled: true, category: "ml" }
+  - { name: "bayes", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: false, category: "ml" }

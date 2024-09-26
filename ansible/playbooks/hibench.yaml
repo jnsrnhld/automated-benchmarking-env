@@ -42,12 +42,6 @@
     - name: Deploy HiBench config as ConfigMap
       command: 'kubectl create configmap hibench-config --from-file="{{hibench_dir }}/conf/hibench.conf"'
 
-    - name: Run prepare script
-      become_user: "{{ linux_username }}"
-      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/prepare/prepare.sh"
-      loop: "{{ workloads }}"
-      when: item.enabled
-
     - name: Prepare templater dict
       vars:
         hibench_jar: "{{ hdfs_address }}{{ hdfs_user_dir }}/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
@@ -55,27 +49,19 @@
       copy:
         dest: "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
         content: |
-          name: {{ item.name }}
           spark_image: {{ spark_image }}
           spark_version: {{ spark_version }}
           hibench_jar: {{ hibench_jar }}
           listener_jar: {{ lister_jar_full_path }}
+
+    - name: Run prepare script
+      become_user: "{{ linux_username }}"
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/prepare/prepare.sh"
       loop: "{{ workloads }}"
       when: item.enabled
 
-    - name: Run templater
-      command:
-        cmd: >
-          bash generate_templates.sh
-            "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/run-command.sh"
-            "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
-            "{{ hibench_dir }}/hibench-spark-app.yaml"
-        chdir: "{{ hibench_dir }}"
-      loop: "{{ workloads }}"
-      when: item.enabled
-
-    - name: Print user info on how to run the benchmarks
-      debug:
-        msg: "kubectl apply -f {{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/spark-app.yaml"
+    - name: Run benchmark
+      become_user: "{{ linux_username }}"
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/run.sh"
       loop: "{{ workloads }}"
       when: item.enabled

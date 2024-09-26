@@ -20,8 +20,10 @@ def parse_input_string(input_string: str) -> dict:
 
     parts = trimmed.split()
     main_class = parts[0]
+    name = main_class.split('.')[-1].lower()  # main class without package info
     arguments = parts[1:]
     return {
+        "name": name,
         "hibench_main_class": main_class,
         "arguments": arguments
     }
