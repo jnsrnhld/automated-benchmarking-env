@@ -14,14 +14,13 @@ workloads:
   # MACHINE LEARNING
   - { name: "als", enabled: true, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
-  - { name: "gbt", enabled: true, category: "ml" }
-  - { name: "gmm", enabled: true, category: "ml" }
-  - { name: "kmeans", enabled: true, category: "ml" }
-  - { name: "lda", enabled: true, category: "ml" }
-  - { name: "linear", enabled: true, category: "ml" }
-  - { name: "lr", enabled: true, category: "ml" }
-  - { name: "pca", enabled: true, category: "ml" }
-  - { name: "rf", enabled: true, category: "ml" }
-  - { name: "svd", enabled: true, category: "ml" }
-  - { name: "svm", enabled: true, category: "ml" }
-  - { name: "xgboost", enabled: true, category: "ml" }
+  - { name: "gbt", enabled: false, category: "ml" }
+  - { name: "gmm", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: false, category: "ml" }
+  - { name: "lda", enabled: false, category: "ml" }
+  - { name: "linear", enabled: false, category: "ml" }
+  - { name: "lr", enabled: false, category: "ml" }
+  - { name: "pca", enabled: false, category: "ml" }
+  - { name: "rf", enabled: false, category: "ml" }
+  - { name: "svd", enabled: false, category: "ml" }
+  - { name: "svm", enabled: false, category: "ml" }
