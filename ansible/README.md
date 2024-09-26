@@ -12,6 +12,27 @@
 For information on how to set up a `k8s` cluster via `kubespray`, see [k8s setup](k8s_setup/README.md).
 All the following commands are expected to be executed from project root directory if not stated otherwise.
 
+### Spark image
+
+Because HiBench does not support Spark versions later than 3.1.1 and there are no public available images of this 
+version which work with the kubeflow spark-operator (as of late 2024), you need to provide that spark image and set its
+name in the ansible [vars](vars.yaml) file.
+
+Therefore, follow these step after cloning the [spark repository](https://github.com/apache/spark) and creating a 
+docker repository on dockerhub:
+```bash
+# checkout to the target version, e.g. 3.1.1
+git checkout "v.3.1.1"
+# build Spark with k8s support
+./build/mvn -Pkubernetes -DskipTests clean package
+# login to your docker repo
+docker logout && docker login -u=$YOUR_DOCKERHUB_USERNAME
+# build the image
+bin/docker-image-tool.sh -r $YOUR_DOCKERHUB_USERNAME -t $VERSION_TAG build
+# push the image
+bin/docker-image-tool.sh -r $YOUR_DOCKERHUB_USERNAME -t $VERSION_TAG push
+```
+
 ##### Prepare local python venv
 ```shell
 python3 -m venv venv
@@ -29,17 +50,6 @@ pip install -r requirements.txt
 scaling services, database, etc.
 - `worker` are all machines that could be part of the hdfs cluster and/or contribute as workers to the batch processing 
 framework
-
-##### HDFS setup
-HDFS is operated by a [`stackable` operator](https://docs.stackable.tech/home/stable/hdfs/). It will create multiple 
-[`PersistentVolumeClaim`](https://kubernetes.io/docs/concepts/storage/persistent-volumes)s, therefore it expects a 
-mapping to some [`StorageClass`](https://kubernetes.io/docs/concepts/storage/storage-classes/). If you create the k8s 
-cluster as described here => [`k8s setup`](k8s_setup/README.md), everything will be auto-wired.
-Per default, the [Local Persistence Volume Static Provisioner](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner)
-will be used and persistent volumes are automatically created and provisioned.
-
-Otherwise, you need to adjust the `hdfs_storage_class` variable [here](vars.yaml). Set it to the name of the 
-`StorageClass` the can provision storage for HDFS.
 
 ##### Run playbooks from root dir
 

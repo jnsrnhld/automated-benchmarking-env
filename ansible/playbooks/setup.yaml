@@ -29,7 +29,7 @@
         name: acl
         state: present
 
-    - name:
+    - name: Create remote templating directory
       file:
         path: "{{ remote_template_dir }}"
         state: directory
@@ -451,19 +451,6 @@
         fail_msg: "One or more required JVM processes are not running. Output was {{ jps_output.stdout }}"
         success_msg: "All required JVM processes are running"
 
-    - name: Deploy Hadoop service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: "{{ hadoop_service }}"
-            namespace: "{{ k8s_namespace }}"
-          spec:
-            type: ExternalName
-            externalName: "{{ hostvars['leaderNode']['ansible_hostname'] }}"
-
 - name: Copy custom SparkListener to HDFS
   hosts: leader
   vars_files:
@@ -521,7 +508,7 @@
         - name: Add maven archives to cache
           synchronize:
             src: "{{ lookup('env', 'PWD') }}/ansible/archives/{{ item }}"
-            dest: "{{ archives_dir }}">
+            dest: "{{ archives_dir }}"
           loop:
             - "apache-hive-3.0.0-bin.tar.gz"
             - "apache-mahout-distribution-0.11.0.tar.gz"
@@ -540,6 +527,11 @@
       shell:
         cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
         chdir: "{{ hibench_dir }}"
+
+    - name: Copy assembly jar to HDFS
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{item}} {{ hdfs_user_dir }}"
+      loop:
+        - "{{ hibench_dir }}/sparkbench/assembly/target/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
 
     - name: Copy SparApp template
       copy:

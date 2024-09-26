@@ -6,7 +6,7 @@ mongo_db_chart_version: "15.6.14"
 # HiBench/Spark related versions (No support after Spark#3.1.1 as of oktober 2024)
 hdfs_version: "3.3.4"
 spark_version: "3.1.1"
-spark_image: "jnsrnhld/spark"
+spark_image: "jnsrnhld/spark:{{ spark_version }}"
 scala_version: "2.12.20"
 hadoop_version: "3.2.4"
 hibench_version: "827c9f6"
@@ -35,8 +35,8 @@ mongodb_password: "Password1!"
 mongodb_resource_preset: "nano"
 
 # HDFS
-hadoop_service: "hadoop-service"
-hdfs_address: "hdfs://{{ hadoop_service }}:9000"
+hadoop_master: "{{ hostvars['leaderNode']['ip'] }}"
+hdfs_address: "hdfs://{{ hadoop_master }}:9000"
 hdfs_replication_factor: 1
 
 # local paths

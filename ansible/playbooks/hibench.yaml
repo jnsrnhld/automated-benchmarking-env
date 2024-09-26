@@ -48,11 +48,6 @@
       loop: "{{ workloads }}"
       when: item.enabled
 
-    - name: Copy necessary files to HDFS
-      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{item}} {{ hdfs_user_dir }}"
-      loop:
-        - "{{ hibench_dir }}/sparkbench/assembly/target/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
-
     - name: Register linux user id
       shell: "id -u {{ linux_username }}"
       register: linux_user_id
