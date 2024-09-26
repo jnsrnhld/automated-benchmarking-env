@@ -48,15 +48,6 @@
       loop: "{{ workloads }}"
       when: item.enabled
 
-    - name: Register linux user id
-      shell: "id -u {{ linux_username }}"
-      register: linux_user_id
-
-    # TODO remove?
-    - name: Register hdfs group id
-      shell: "getent group {{ hdfs_group }} | cut -d: -f3"
-      register: hdfs_group_id
-
     - name: Prepare templater dict
       vars:
         hibench_jar: "{{ hdfs_address }}{{ hdfs_user_dir }}/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
@@ -64,8 +55,6 @@
       copy:
         dest: "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/values.yaml"
         content: |
-          linux_user_id: {{ linux_user_id.stdout }}
-          hdfs_group_id: {{ hdfs_group_id.stdout }}
           name: {{ item.name }}
           spark_image: {{ spark_image }}
           spark_version: {{ spark_version }}
