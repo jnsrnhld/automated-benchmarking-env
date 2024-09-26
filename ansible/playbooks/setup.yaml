@@ -541,18 +541,13 @@
         group: "{{ linux_username }}"
         mode: '0644'
 
-    - name: Copy templater script to HiBench dir
+    - name: Copy scripts to HiBench dir
       copy:
-        src: "{{ local_scripts_dir }}/sparkapp-templater.py"
-        dest: "{{ hibench_dir }}/sparkapp-templater.py"
+        src: "{{ local_scripts_dir }}/{{ item.src }}"
+        dest: "{{ hibench_dir }}/{{ item.target }}"
         owner: "{{ linux_username }}"
         group: "{{ linux_username }}"
         mode: '0644'
-
-    - name: Copy workload_functions.sh patch HiBench dir
-      copy:
-        src: "{{ hibench_template_dir }}/workload_functions.sh"
-        dest: "{{ hibench_dir }}/bin/functions/workload_functions.sh"
-        owner: "{{ linux_username }}"
-        group: "{{ linux_username }}"
-        mode: '0644'
+      loop:
+        - { src: "sparkapp-templater.py", target: ""}
+        - { src: "workload_functions.sh", target: "bin/functions"}
