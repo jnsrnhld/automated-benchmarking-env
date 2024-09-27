@@ -544,8 +544,10 @@
     - name: Add mapping for additional config variable
       lineinfile:
         path: "{{ hibench_dir }}/bin/functions/hibench_prop_env_mapping.py"
-        insertafter: "HiBenchEnvPropMappingMandatory=dict("
-        line: '\tKUBERNETES_NAMESPACE="{{ hibench.kubernetes.namespace }}",'
+        insertafter: '^HiBenchEnvPropMappingMandatory=dict\($'
+        line: '    KUBERNETES_NAMESPACE="hibench.kubernetes.namespace",'
+        state: present
+        create: yes
 
     - name: Copy scripts to HiBench dir
       copy:
@@ -555,5 +557,5 @@
         group: "{{ linux_username }}"
         mode: '0644'
       loop:
-        - { src: "sparkapp-templater.py", target: ""}
-        - { src: "workload_functions.sh", target: "bin/functions"}
+        - { src: "sparkapp-templater.py", target: "" }
+        - { src: "workload_functions.sh", target: "bin/functions" }

@@ -24,3 +24,8 @@ workloads:
   - { name: "rf", enabled: false, category: "ml" }
   - { name: "svd", enabled: false, category: "ml" }
   - { name: "svm", enabled: false, category: "ml" }
+  # WEBSEARCH
+  - { name: "nutchindexing", enabled: false, category: "websearch" }
+  - { name: "pagerank", enabled: false, category: "websearch" }
+  # GRAPH
+  - { name: "pagerank", enabled: true, category: "graph" }
