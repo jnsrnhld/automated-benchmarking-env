@@ -45,7 +45,7 @@ ansible_dir: "{{ working_dir }}/ansible"
 local_template_dir: "{{ ansible_dir }}/templates"
 hibench_template_dir: "{{ local_template_dir }}/hibench"
 hadoop_template_dir: "{{ local_template_dir }}/hadoop"
-local_scripts_dir: "{{ ansible_dir }}/scripts"
+local_patch_dir: "{{ ansible_dir }}/patch"
 
 # remote paths
 user_dir: "/home/{{ linux_username }}"

@@ -523,16 +523,6 @@
             - { path: "hadoopbench/sql/pom.xml", template: "sql.pom.xml" }
             - { path: "hadoopbench/nutchindexing/pom.xml", template: "nutch.pom.xml" }
 
-    - name: Build HiBench
-      shell:
-        cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
-        chdir: "{{ hibench_dir }}"
-
-    - name: Copy assembly jar to HDFS
-      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{item}} {{ hdfs_user_dir }}"
-      loop:
-        - "{{ hibench_dir }}/sparkbench/assembly/target/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"
-
     - name: Copy SparApp template
       copy:
         src: "{{ local_template_dir }}/hibench-spark-app.yaml"
@@ -549,9 +539,9 @@
         state: present
         create: yes
 
-    - name: Copy scripts to HiBench dir
+    - name: Copy patch files to HiBench dir
       copy:
-        src: "{{ local_scripts_dir }}/{{ item.src }}"
+        src: "{{ local_patch_dir }}/{{ item.src }}"
         dest: "{{ hibench_dir }}/{{ item.target }}"
         owner: "{{ linux_username }}"
         group: "{{ linux_username }}"
@@ -559,3 +549,14 @@
       loop:
         - { src: "sparkapp-templater.py", target: "" }
         - { src: "workload_functions.sh", target: "bin/functions" }
+        - { src: "NWeightDataGenerator.scala", target: "sparkbench/graph/src/main/scala/com/intel/hibench/sparkbench/graph/nweight/NWeightDataGenerator.scala" }
+
+    - name: Build HiBench
+      shell:
+        cmd: "mvn -Psparkbench -Dspark={{ spark_hibench_profile }} -Dscala={{ scala_hibench_profile }} clean package"
+        chdir: "{{ hibench_dir }}"
+
+    - name: Copy assembly jar to HDFS
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f {{item}} {{ hdfs_user_dir }}"
+      loop:
+        - "{{ hibench_dir }}/sparkbench/assembly/target/sparkbench-assembly-8.0-SNAPSHOT-dist.jar"

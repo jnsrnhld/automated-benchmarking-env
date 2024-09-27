@@ -28,4 +28,5 @@ workloads:
   - { name: "nutchindexing", enabled: false, category: "websearch" }
   - { name: "pagerank", enabled: false, category: "websearch" }
   # GRAPH
-  - { name: "pagerank", enabled: true, category: "graph" }
+  - { name: "nweight", enabled: true, category: "graph" }
+  - { name: "pagerank", enabled: false, category: "graph" }
