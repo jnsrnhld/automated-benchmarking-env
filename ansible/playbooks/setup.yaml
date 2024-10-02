@@ -401,6 +401,10 @@
           bin/yarn --daemon start resourcemanager
         chdir: "{{ hadoop_dir }}"
 
+    - name: Pause for 5 seconds to wait for proper application startup
+      pause:
+        seconds: 5
+
     - name: Run jps and capture the output
       command: jps
       register: jps_output
@@ -438,6 +442,10 @@
           bin/hdfs --daemon start datanode
           bin/yarn --daemon start nodemanager
         chdir: "{{ hadoop_dir }}"
+
+    - name: Pause for 5 seconds to wait for proper application startup
+      pause:
+        seconds: 5
 
     - name: Run jps and capture the output
       command: jps
