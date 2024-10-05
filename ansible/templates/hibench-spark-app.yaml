@@ -17,6 +17,7 @@ spec:
   restartPolicy:
     type: Never
   driver:
+    memory: {{ driver_memory }}
     labels:
       version: {{ spark_version }}
     serviceAccount: spark-operator-spark
@@ -27,6 +28,7 @@ spec:
       - name: SPARKBENCH_PROPERTIES_FILES
         value: /mnt/config-maps/hibench.conf
   executor:
+    memory: {{ executor_memory }}
     labels:
       version: {{ spark_version }}
     configMaps:
@@ -40,3 +42,8 @@ spec:
       - {{ listener_jar }}
   sparkConf:
     "spark.extraListeners": de.tu_berlin.jarnhold.listener.CentralizedSparkListener
+    # sets the memory limit of result sets gathered on driver to infinite
+    "spark.driver.maxResultSize": 0
+    "spark.shuffle.service.enabled": true
+    "spark.dynamicAllocation.enabled": true
+    "spark.dynamicAllocation.schedulerBacklogTimeout": 10d

@@ -53,6 +53,8 @@
           spark_version: {{ spark_version }}
           hibench_jar: {{ hibench_jar }}
           listener_jar: {{ lister_jar_full_path }}
+          driver_memory: {{ driver_memory }}
+          executor_memory: {{ executor_memory }}
 
     - name: Run prepare script
       become_user: "{{ linux_username }}"

@@ -30,3 +30,7 @@ workloads:
   # GRAPH
   - { name: "nweight", enabled: true, category: "graph" }
   - { name: "pagerank", enabled: false, category: "graph" }
+
+# resources
+driver_memory: 8192m
+executor_memory: 8192m
