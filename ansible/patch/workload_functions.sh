@@ -191,8 +191,10 @@ function check_status() {
     echo "Current status: $status"
     if [ "$status" == "COMPLETED" ]; then
         return 0
+    elif [ "$status" == "FAILED" ]; then
+        return 2  # Returning 2 to indicate failure status
     else
-        return 1
+        return 1  # Any other status, keep polling
     fi
 }
 
@@ -215,12 +217,18 @@ function run_spark_job() {
     output=$(kubectl apply -n "$KUBERNETES_NAMESPACE" -f "$output_path")
     resource_name=$(echo "$output" | awk '{print $1}')
 
-    # polling as long as SparkApplication is not in state COMPLETED
+    # polling as long as SparkApplication is not in state COMPLETED or FAILED
     echo "Waiting for SparkApplication $resource_name to reach COMPLETED state..."
     while true; do
-        if check_status; then
+        check_status
+        status_code=$?
+        if [ $status_code -eq 0 ]; then
             echo "SparkApplication $resource_name has completed."
             break
+        elif [ $status_code -eq 2 ]; then
+            echo "SparkApplication $resource_name has failed."
+            stop_monitor ${MONITOR_PID}
+            exit 1
         else
             sleep 5
         fi

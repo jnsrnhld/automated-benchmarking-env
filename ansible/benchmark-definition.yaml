@@ -12,7 +12,7 @@ workloads:
   - { name: "terasort", enabled: false, category: "micro" }
   - { name: "wordcount", enabled: true, category: "micro" }
   # MACHINE LEARNING
-  - { name: "als", enabled: true, category: "ml" }
+  - { name: "als", enabled: false, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
   - { name: "gbt", enabled: false, category: "ml" }
   - { name: "gmm", enabled: false, category: "ml" }
@@ -28,9 +28,11 @@ workloads:
   - { name: "nutchindexing", enabled: false, category: "websearch" }
   - { name: "pagerank", enabled: false, category: "websearch" }
   # GRAPH
-  - { name: "nweight", enabled: true, category: "graph" }
+  - { name: "nweight", enabled: false, category: "graph" }
   - { name: "pagerank", enabled: false, category: "graph" }
 
-# resources
+# configuration
+is_adaptive: false
+bridgeServiceAddress: "tcp://localhost:5555"
 driver_memory: 8192m
 executor_memory: 8192m

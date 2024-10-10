@@ -110,8 +110,8 @@ object NWeightDataGenerator {
     sc.stop()
   }
 
+  <!-- PATCH START -->
   def loadModel(sc: SparkContext, partitions: Int): MatrixFactorizationModel = {
-
     getClass.getResourceAsStream("/nweight-user-features") match {
       case null => throw new FileNotFoundException("/nweight-user-features")
       case stream =>
@@ -132,4 +132,5 @@ object NWeightDataGenerator {
         new MatrixFactorizationModel(1, userFeaturesPartitioned, userFeaturesPartitioned)
     }
   }
+  <!-- PATCH END -->
 }

@@ -531,7 +531,7 @@
             - { path: "hadoopbench/sql/pom.xml", template: "sql.pom.xml" }
             - { path: "hadoopbench/nutchindexing/pom.xml", template: "nutch.pom.xml" }
 
-    - name: Copy SparApp template
+    - name: Copy SparkApp template
       copy:
         src: "{{ local_template_dir }}/hibench-spark-app.yaml"
         dest: "{{ hibench_dir }}"
@@ -555,9 +555,11 @@
         group: "{{ linux_username }}"
         mode: '0644'
       loop:
-        - { src: "sparkapp-templater.py", target: "" }
-        - { src: "workload_functions.sh", target: "bin/functions" }
+        - { src: "sparkbench.pom.xml", target: "sparkbench/pom.xml" }
+        - { src: "sparkbench.ml.pom.xml", target: "sparkbench/ml/pom.xml" }
         - { src: "NWeightDataGenerator.scala", target: "sparkbench/graph/src/main/scala/com/intel/hibench/sparkbench/graph/nweight/NWeightDataGenerator.scala" }
+        - { src: "workload_functions.sh", target: "bin/functions" }
+        - { src: "sparkapp-templater.py", target: "" }
 
     - name: Build HiBench
       shell:

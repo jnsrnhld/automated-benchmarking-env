@@ -5,21 +5,21 @@ metadata:
 spec:
   type: Scala
   mode: cluster
-  image: {{ spark_image }}
+  image: "{{ spark_image }}"
   imagePullPolicy: Always
-  mainClass: {{ hibench_main_class }}
-  mainApplicationFile: {{ hibench_jar }}
+  mainClass: "{{ hibench_main_class }}"
+  mainApplicationFile: "{{ hibench_jar }}"
   arguments:
     {% for argument in arguments -%}
     - "{{ argument }}"
     {% endfor %}
-  sparkVersion: {{ spark_version }}
+  sparkVersion: "{{ spark_version }}"
   restartPolicy:
     type: Never
   driver:
-    memory: {{ driver_memory }}
+    memory: "{{ driver_memory }}"
     labels:
-      version: {{ spark_version }}
+      version: "{{ spark_version }}"
     serviceAccount: spark-operator-spark
     configMaps:
       - name: hibench-config
@@ -28,9 +28,9 @@ spec:
       - name: SPARKBENCH_PROPERTIES_FILES
         value: /mnt/config-maps/hibench.conf
   executor:
-    memory: {{ executor_memory }}
+    memory: "{{ executor_memory }}"
     labels:
-      version: {{ spark_version }}
+      version: "{{ spark_version }}"
     configMaps:
       - name: hibench-config
         path: /mnt/config-maps
@@ -39,11 +39,8 @@ spec:
         value: /mnt/config-maps/hibench.conf
   deps:
     jars:
-      - {{ listener_jar }}
+      - "{{ listener_jar }}"
   sparkConf:
-    "spark.extraListeners": de.tu_berlin.jarnhold.listener.CentralizedSparkListener
-    # sets the memory limit of result sets gathered on driver to infinite
-    "spark.driver.maxResultSize": 0
-    "spark.shuffle.service.enabled": true
-    "spark.dynamicAllocation.enabled": true
-    "spark.dynamicAllocation.schedulerBacklogTimeout": 10d
+    "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
+    "spark.customExtraListener.isAdaptive": "{{ is_adaptive }}"
+    "spark.customExtraListener.bridgeServiceAddress": "{{ bridgeServiceAddress }}"

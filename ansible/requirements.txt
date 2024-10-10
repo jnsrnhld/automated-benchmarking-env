@@ -1,3 +1,4 @@
-PyYAML==6.0.1
+PyYAML==6.0.2
 openshift==0.13.2
-ansible==9.5.1
+ansible==9.11.0
+passlib==1.7.4

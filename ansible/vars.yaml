@@ -3,18 +3,18 @@ java_version: "8"
 helm_version: "3.15.1"
 spark_operator_version: "1.4.6"
 mongo_db_chart_version: "15.6.14"
-# HiBench/Spark related versions (No support after Spark#3.1.1 as of oktober 2024)
+# HiBench/Spark related versions (No official support in HiBench after Spark#3.1.* as of november 2024)
 hdfs_version: "3.3.4"
-spark_version: "3.1.1"
-spark_image: "jnsrnhld/spark:{{ spark_version }}"
+spark_version: "3.5.3"
+spark_image: "apache/spark:{{ spark_version }}"
 scala_version: "2.12.20"
 hadoop_version: "3.2.4"
 hibench_version: "827c9f6"
-spark_hibench_profile: "3.1"
+spark_hibench_profile: "3.5"
 scala_hibench_profile: "2.12"
 
 # general
-listener_jar: "listener_2.12-0.1.0-SNAPSHOT.jar"
+listener_jar: "listener-assembly-0.1.0-SNAPSHOT.jar"
 
 # this user can be used for ansible scripts and experiment execution
 linux_username: "mtuser"
