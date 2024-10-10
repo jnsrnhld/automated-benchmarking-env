@@ -12,11 +12,11 @@ workloads:
   - { name: "terasort", enabled: false, category: "micro" }
   - { name: "wordcount", enabled: true, category: "micro" }
   # MACHINE LEARNING
-  - { name: "als", enabled: false, category: "ml" }
+  - { name: "als", enabled: true, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
   - { name: "gbt", enabled: false, category: "ml" }
   - { name: "gmm", enabled: false, category: "ml" }
-  - { name: "kmeans", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: true, category: "ml" }
   - { name: "lda", enabled: false, category: "ml" }
   - { name: "linear", enabled: false, category: "ml" }
   - { name: "lr", enabled: false, category: "ml" }
@@ -25,10 +25,10 @@ workloads:
   - { name: "svd", enabled: false, category: "ml" }
   - { name: "svm", enabled: false, category: "ml" }
   # WEBSEARCH
-  - { name: "nutchindexing", enabled: false, category: "websearch" }
+  - { name: "nutchindexing", enabled: true, category: "websearch" }
   - { name: "pagerank", enabled: false, category: "websearch" }
   # GRAPH
-  - { name: "nweight", enabled: false, category: "graph" }
+  - { name: "nweight", enabled: true, category: "graph" }
   - { name: "pagerank", enabled: false, category: "graph" }
 
 # configuration
