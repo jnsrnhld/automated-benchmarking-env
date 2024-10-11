@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Iterator, Tuple, Callable
-from univariate_predictor import UnivariatePredictor
+from .univariate_predictor import UnivariatePredictor
 
 
 class CrossValidation:

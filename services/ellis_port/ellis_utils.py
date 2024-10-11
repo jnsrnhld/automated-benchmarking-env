@@ -1,11 +1,16 @@
-import logging
+import datetime
 import numpy as np
-from pymongo import MongoClient, ASCENDING
 from typing import Tuple
 from collections import defaultdict
+from bson.objectid import ObjectId
 
-from ernest import Ernest
-from bell import Bell
+from .ernest import Ernest
+from .bell import Bell
+
+relative_slack_up = 1.05
+absolute_slack_up = 0
+relative_slack_down = 0.85
+absolute_slack_down = 0
 
 
 def compute_predictions(
@@ -66,9 +71,13 @@ class EllisUtils:
         """
         self.db = db
 
+    @staticmethod
+    def to_date_time(time: int) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(time / 1000.0, datetime.timezone.utc)
+
     def compute_initial_scale_out(
             self,
-            app_event_id: int,
+            app_event_id: str,
             app_signature: str,
             min_executors: int,
             max_executors: int,
@@ -78,7 +87,7 @@ class EllisUtils:
         Computes the initial scale-out value based on previous runs and predictions.
 
         Args:
-            app_event_id (int): The current application event ID.
+            app_event_id (str): The current application event ID.
             app_signature (str): The application signature.
             min_executors (int): The minimum number of executors.
             max_executors (int): The maximum number of executors.
@@ -116,13 +125,13 @@ class EllisUtils:
                 return int(candidate_scale_outs.min())
 
     def get_non_adaptive_runs(
-            self, app_event_id: int, app_signature: str
+            self, app_event_id: str, app_signature: str
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Retrieves non-adaptive runs prior to the given application event ID.
 
         Args:
-            app_event_id (int): The current application event ID.
+            app_event_id (str): The current application event ID.
             app_signature (str): The application signature.
 
         Returns:
@@ -134,14 +143,25 @@ class EllisUtils:
             {
                 '$match': {
                     'app_id': app_signature,
-                    '_id': {'$lt': app_event_id}
+                    '_id': {'$lt': ObjectId(app_event_id)}
                 }
             },
             {
                 '$lookup': {
                     'from': 'job_event',
-                    'localField': '_id',
-                    'foreignField': 'app_id',
+                    'let': {'appId': '$_id'},
+                    'pipeline': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$eq': [
+                                        '$app_event_id',
+                                        {'$toString': '$$appId'}
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     'as': 'job_events'
                 }
             },
@@ -185,33 +205,117 @@ class EllisUtils:
         return scale_outs, runtimes
 
     def compute_predictions_from_stage_runtimes(
-            self, app_event_id: int, app_signature: str, predicted_scale_outs: np.ndarray
+            self, app_event_id: str, app_signature: str, predicted_scale_outs: np.ndarray
     ) -> np.ndarray:
         """
         Computes predicted runtimes for a range of scale-outs based on historical data.
 
         Args:
-            app_event_id (int): The current application event ID.
+            app_event_id (str): The current application event ID.
             app_signature (str): The application signature.
             predicted_scale_outs (np.ndarray): Array of scale-outs to predict runtimes for.
 
         Returns:
             np.ndarray: Array of predicted runtimes corresponding to the predicted scale-outs.
         """
-        app_event_collection = self.db['app_event']
+        job_runtime_data = self.gather_job_runtime_data(app_event_id, app_signature)
 
+        predicted_runtimes_list = []
+
+        for job_id in sorted(job_runtime_data.keys()):
+            x_y_tuples = job_runtime_data[job_id]
+            x = np.array([t[0] for t in x_y_tuples])
+            y = np.array([t[1] for t in x_y_tuples])
+            predicted_runtimes = compute_predictions(x, y, predicted_scale_outs)
+            predicted_runtimes_list.append(predicted_runtimes)
+
+        # Sum up the predicted runtimes across all jobs
+        total_predicted_runtimes = np.sum(predicted_runtimes_list, axis=0)
+        return total_predicted_runtimes
+
+    def update_scaleout(self, app_event_id: str, job_id: int, job_end_time: int, current_scale_out: int) -> int:
+        target_runtime_ms = 30000
+        min_executors = 1
+        max_executors = 10
+
+        app_event = self.db['app_event'].find_one({'_id': ObjectId(app_event_id)})
+        app_signature = app_event['app_id']
+        job_runtime_data = self.gather_job_runtime_data(app_event_id, app_signature)
+
+        predicted_scale_outs = np.arange(min_executors, max_executors + 1)
+        remaining_runtimes = []
+
+        future_job_ids = sorted(k for k in job_runtime_data.keys() if k > job_id)
+
+        for future_job_id in future_job_ids:
+            x_y_tuples = job_runtime_data[future_job_id]
+            x = np.array([t[0] for t in x_y_tuples])
+            y = np.array([t[1] for t in x_y_tuples])
+            predicted_runtimes = compute_predictions(x, y, predicted_scale_outs)
+            remaining_runtimes.append(predicted_runtimes)
+
+        if len(remaining_runtimes) <= 1:
+            return -1
+
+        next_job_runtimes = remaining_runtimes[0]
+        future_jobs_runtimes = np.sum(remaining_runtimes[1:], axis=0)
+
+        current_runtime = (EllisUtils.to_date_time(job_end_time) - app_event['started_at']).total_seconds() * 1000
+        print(f"Current runtime: {current_runtime}")
+        next_job_runtime = next_job_runtimes[current_scale_out - min_executors]
+        print(f"Next job runtime: {next_job_runtime}")
+        remaining_target_runtime = target_runtime_ms - current_runtime - next_job_runtime
+        print(f"Remaining target runtime: {remaining_target_runtime}")
+        remaining_runtime_prediction = future_jobs_runtimes[current_scale_out - min_executors]
+        print(f"Remaining runtime prediction: {remaining_runtime_prediction}")
+
+        if remaining_runtime_prediction > remaining_target_runtime * relative_slack_up + absolute_slack_up:
+            candidate_scale_outs = np.where(future_jobs_runtimes < remaining_target_runtime * 0.9)[0]
+            if len(candidate_scale_outs) > 0:
+                next_scale_out_index = candidate_scale_outs[0]
+            else:
+                next_scale_out_index = np.argmin(future_jobs_runtimes)
+            next_scale_out = predicted_scale_outs[next_scale_out_index]
+            if next_scale_out != current_scale_out:
+                return int(next_scale_out)
+
+        elif remaining_runtime_prediction < remaining_target_runtime * relative_slack_down - absolute_slack_down:
+            candidate_scale_outs = np.where(future_jobs_runtimes < remaining_target_runtime * 0.9)[0]
+            if len(candidate_scale_outs) > 0:
+                next_scale_out_index = candidate_scale_outs[0]
+            else:
+                next_scale_out_index = np.argmin(future_jobs_runtimes)
+            next_scale_out = predicted_scale_outs[next_scale_out_index]
+            if next_scale_out < current_scale_out:
+                return int(next_scale_out)
+
+        return current_scale_out
+
+    def gather_job_runtime_data(self, app_event_id, app_signature):
+        app_event_collection = self.db['app_event']
         pipeline = [
             {
                 '$match': {
                     'app_id': app_signature,
-                    '_id': {'$lt': app_event_id}
+                    '_id': {'$lt': ObjectId(app_event_id)}
                 }
             },
             {
                 '$lookup': {
                     'from': 'job_event',
-                    'localField': '_id',
-                    'foreignField': 'app_id',
+                    'let': {'appId': '$_id'},
+                    'pipeline': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$eq': [
+                                        '$app_event_id',
+                                        {'$toString': '$$appId'}
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     'as': 'job_events'
                 }
             },
@@ -229,7 +333,6 @@ class EllisUtils:
                 '$sort': {'job_id': 1}
             }
         ]
-
         result = list(app_event_collection.aggregate(pipeline))
 
         # Group by 'job_id'
@@ -239,16 +342,4 @@ class EllisUtils:
             scale_out = doc['scale_out']
             duration_ms = doc['duration_ms']
             job_runtime_data[job_id].append((scale_out, duration_ms))
-
-        predicted_runtimes_list = []
-
-        for job_id in sorted(job_runtime_data.keys()):
-            x_y_tuples = job_runtime_data[job_id]
-            x = np.array([t[0] for t in x_y_tuples])
-            y = np.array([t[1] for t in x_y_tuples])
-            predicted_runtimes = compute_predictions(x, y, predicted_scale_outs)
-            predicted_runtimes_list.append(predicted_runtimes)
-
-        # Sum up the predicted runtimes across all jobs
-        total_predicted_runtimes = np.sum(predicted_runtimes_list, axis=0)
-        return total_predicted_runtimes
+        return job_runtime_data

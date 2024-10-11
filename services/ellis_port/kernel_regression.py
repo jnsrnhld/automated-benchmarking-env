@@ -1,4 +1,4 @@
-from univariate_predictor import UnivariatePredictor
+from .univariate_predictor import UnivariatePredictor
 import numpy as np
 
 

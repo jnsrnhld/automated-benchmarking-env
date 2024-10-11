@@ -6,7 +6,7 @@ from config import Config
 from server import ZeroMQServer
 from event_handler import EventHandler
 from no_op_handler import NoOpEventHandler
-from ellis_port.ellis_event_handler import EllisEventHandler
+from ellis_event_handler import EllisEventHandler
 
 
 def connect_to_mongodb():

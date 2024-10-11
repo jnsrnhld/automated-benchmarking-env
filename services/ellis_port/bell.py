@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Optional, List
 
-from univariate_predictor import UnivariatePredictor
-from ernest import Ernest
-from kernel_regression import KernelRegression
-from interpolation_splits import InterpolationSplits
-from cross_validation import CrossValidation
+from .univariate_predictor import UnivariatePredictor
+from .ernest import Ernest
+from .kernel_regression import KernelRegression
+from .interpolation_splits import InterpolationSplits
+from .cross_validation import CrossValidation
 
 
 class Bell(UnivariatePredictor):

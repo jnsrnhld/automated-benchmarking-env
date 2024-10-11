@@ -1,6 +1,12 @@
 import numpy as np
 from scipy.optimize import nnls
-from univariate_predictor import UnivariatePredictor
+from .univariate_predictor import UnivariatePredictor
+
+
+def feature_map(x: np.ndarray) -> np.ndarray:
+    ones = np.ones_like(x)
+    x = np.vstack([ones, ones / x, np.log(x), x]).T
+    return x
 
 
 class Ernest(UnivariatePredictor):
@@ -10,28 +16,23 @@ class Ernest(UnivariatePredictor):
     def _fit(self, x: np.ndarray, y: np.ndarray) -> 'Ernest':
         if len(x) != len(y):
             raise ValueError("Vectors x and y must have the same length!")
+        x = feature_map(x)
 
-        x = self.feature_map(x)
-
-        # Use SciPy's nnls to solve x @ coefficients = y, with coefficients >= 0
-        self.coefficients, _ = nnls(x, y)
-        return self
+        # When x is entirely ones, the resulting feature matrix has only one unique row, meaning it has rank 1 (despite
+        # having more rows), leading to a singular matrix when attempting least squares or NNLS.
+        # In this case, we directly compute the mean of y and set the coefficients accordingly.
+        if np.all(x == x[0]):
+            print(f"Ernest#fit: x is entirely ones. Using mean y value.")
+            self.coefficients = np.mean(y)
+            return self
+        else:
+            xtx = np.dot(x.T, x)
+            xty = np.dot(x.T, y)
+            self.coefficients, _ = nnls(xtx, xty)
+            return self
 
     def _predict(self, x: np.ndarray) -> np.ndarray:
         if self.coefficients is None:
             raise Exception("Model has not been fitted yet!")
-        X = self.feature_map(x)
-        return X @ self.coefficients
-
-    def feature_map(self, x: np.ndarray) -> np.ndarray:
-        x = np.asarray(x)
-        ones = np.ones_like(x)
-
-        # Construct the feature matrix
-        X = np.vstack([
-            ones,  # Bias term
-            ones / x,  # 1 / x
-            np.log(x),  # log(x)
-            x  # x
-        ]).T  # Transpose to get shape (n_samples, n_features)
-        return X
+        x = feature_map(x)
+        return x @ self.coefficients

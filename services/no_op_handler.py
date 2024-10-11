@@ -1,9 +1,6 @@
 import uuid
 
-from event_handler import EventHandler
-from event_handler import RequestMessage
-from event_handler import ResponseMessage
-
+from event_handler import EventHandler, RequestMessage, ResponseMessage
 
 class NoOpEventHandler(EventHandler):
 

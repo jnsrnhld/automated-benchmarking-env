@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
 
-from kernel_regression import KernelRegression
-from ernest import Ernest
-from bell import Bell
+from .kernel_regression import KernelRegression
+from .ernest import Ernest
+from .bell import Bell
 
 
 class TestUnivariatePredictors(unittest.TestCase):
