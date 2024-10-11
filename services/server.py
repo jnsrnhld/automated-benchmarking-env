@@ -37,7 +37,7 @@ class ZeroMQServer:
         Process the incoming request and delegate to the appropriate event handler method.
         """
         event_type = message.event_type
-        print(f"Processing {event_type.value} event for app_id: {message.app_id}")
+        print(f"Processing {event_type.value} event for app_id: {message.app_event_id}")
 
         if event_type == EventType.JOB_START:
             return self.event_handler.handle_job_start(message)

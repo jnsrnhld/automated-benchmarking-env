@@ -10,7 +10,7 @@ workloads:
   - { name: "sleep", enabled: false, category: "micro" }
   - { name: "sort", enabled: false, category: "micro" }
   - { name: "terasort", enabled: false, category: "micro" }
-  - { name: "wordcount", enabled: true, category: "micro" }
+  - { name: "wordcount", enabled: false, category: "micro" }
   # MACHINE LEARNING
   - { name: "als", enabled: true, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
@@ -27,7 +27,7 @@ workloads:
   # WEBSEARCH
   - { name: "pagerank", enabled: false, category: "websearch" }
   # GRAPH
-  - { name: "nweight", enabled: true, category: "graph" }
+  - { name: "nweight", enabled: false, category: "graph" }
   - { name: "pagerank", enabled: false, category: "graph" }
 
 # configuration

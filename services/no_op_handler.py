@@ -7,6 +7,9 @@ from event_handler import ResponseMessage
 
 class NoOpEventHandler(EventHandler):
 
+    def __init__(self, db):
+        pass
+
     def handle_job_start(self, message: RequestMessage) -> ResponseMessage:
         return self.no_op_recommendation(message)
 
@@ -18,6 +21,6 @@ class NoOpEventHandler(EventHandler):
 
     @staticmethod
     def no_op_recommendation(message):
-        app_id = message.app_id or str(uuid.uuid4())
+        app_id = message.app_event_id or str(uuid.uuid4())
         recommended_scale_out = message.num_executors
-        return ResponseMessage(app_id=app_id, recommended_scale_out=recommended_scale_out)
+        return ResponseMessage(app_event_id=app_id, recommended_scale_out=recommended_scale_out)

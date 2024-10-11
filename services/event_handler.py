@@ -12,7 +12,7 @@ class EventType(Enum):
 
 @dataclass
 class RequestMessage:
-    app_id: str
+    app_event_id: str
     app_name: str
     app_time: int
     job_id: int
@@ -33,7 +33,7 @@ class RequestMessage:
 
 @dataclass
 class ResponseMessage:
-    app_id: str
+    app_event_id: str
     recommended_scale_out: int
 
     @staticmethod
@@ -61,3 +61,10 @@ class EventHandler(ABC):
     @abstractmethod
     def handle_application_end(self, message: RequestMessage) -> ResponseMessage:
         pass
+
+    @staticmethod
+    def no_op_recommendation(message):
+        return ResponseMessage(
+            app_event_id=message.app_event_id,
+            recommended_scale_out=message.num_executors
+        )

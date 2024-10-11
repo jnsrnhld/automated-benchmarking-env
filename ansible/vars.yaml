@@ -32,7 +32,7 @@ mongodb_database: "test"
 mongodb_username: "test"
 mongodb_root_username: "root"
 mongodb_password: "Password1!"
-mongodb_resource_preset: "nano"
+mongodb_resource_preset: "small"
 
 # HDFS
 hadoop_master: "{{ hostvars['leaderNode']['ip'] }}"

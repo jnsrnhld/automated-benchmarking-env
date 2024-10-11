@@ -8,6 +8,54 @@ from ernest import Ernest
 from bell import Bell
 
 
+def compute_predictions(
+        scale_outs: np.ndarray, runtimes: np.ndarray, predicted_scale_outs: np.ndarray
+) -> np.ndarray:
+    """
+    Computes predicted runtimes using interpolation and extrapolation models.
+
+    Args:
+        scale_outs (np.ndarray): Array of observed scale-outs.
+        runtimes (np.ndarray): Array of observed runtimes corresponding to the scale-outs.
+        predicted_scale_outs (np.ndarray): Array of scale-outs to predict runtimes for.
+
+    Returns:
+        np.ndarray: Array of predicted runtimes.
+    """
+    x = scale_outs.astype(float)
+    y = runtimes.astype(float)
+    x_predict = predicted_scale_outs.astype(float)
+
+    # Determine interpolation and extrapolation ranges
+    interpolation_mask = (x_predict >= x.min()) & (x_predict <= x.max())
+    x_predict_interpolation = x_predict[interpolation_mask]
+    x_predict_extrapolation = x_predict[~interpolation_mask]
+
+    # Initialize predictions
+    y_predict = np.zeros_like(x_predict)
+
+    # Fit the Ernest model
+    ernest = Ernest()
+    ernest.fit(x, y)
+
+    unique_scale_outs = np.unique(x).size
+
+    if unique_scale_outs <= 2:
+        # If very few data points, use the mean runtime
+        y_predict[:] = y.mean()
+    elif unique_scale_outs <= 5:
+        # If too few data points, use the Ernest model
+        y_predict[:] = ernest.predict(x_predict)
+    else:
+        # Use the Bell model for interpolation and Ernest for extrapolation
+        bell = Bell()
+        bell.fit(x, y)
+        y_predict[interpolation_mask] = bell.predict(x_predict_interpolation)
+        y_predict[~interpolation_mask] = ernest.predict(x_predict_extrapolation)
+
+    return y_predict.astype(int)
+
+
 class EllisUtils:
     def __init__(self, db):
         """
@@ -93,7 +141,7 @@ class EllisUtils:
                 '$lookup': {
                     'from': 'job_event',
                     'localField': '_id',
-                    'foreignField': 'app_event_id',
+                    'foreignField': 'app_id',
                     'as': 'job_events'
                 }
             },
@@ -163,7 +211,7 @@ class EllisUtils:
                 '$lookup': {
                     'from': 'job_event',
                     'localField': '_id',
-                    'foreignField': 'app_event_id',
+                    'foreignField': 'app_id',
                     'as': 'job_events'
                 }
             },
@@ -198,98 +246,9 @@ class EllisUtils:
             x_y_tuples = job_runtime_data[job_id]
             x = np.array([t[0] for t in x_y_tuples])
             y = np.array([t[1] for t in x_y_tuples])
-            predicted_runtimes = self.compute_predictions(x, y, predicted_scale_outs)
+            predicted_runtimes = compute_predictions(x, y, predicted_scale_outs)
             predicted_runtimes_list.append(predicted_runtimes)
 
         # Sum up the predicted runtimes across all jobs
         total_predicted_runtimes = np.sum(predicted_runtimes_list, axis=0)
         return total_predicted_runtimes
-
-    def compute_predictions(
-            self, scale_outs: np.ndarray, runtimes: np.ndarray, predicted_scale_outs: np.ndarray
-    ) -> np.ndarray:
-        """
-        Computes predicted runtimes using interpolation and extrapolation models.
-
-        Args:
-            scale_outs (np.ndarray): Array of observed scale-outs.
-            runtimes (np.ndarray): Array of observed runtimes corresponding to the scale-outs.
-            predicted_scale_outs (np.ndarray): Array of scale-outs to predict runtimes for.
-
-        Returns:
-            np.ndarray: Array of predicted runtimes.
-        """
-        x = scale_outs.astype(float)
-        y = runtimes.astype(float)
-        x_predict = predicted_scale_outs.astype(float)
-
-        # Determine interpolation and extrapolation ranges
-        interpolation_mask = (x_predict >= x.min()) & (x_predict <= x.max())
-        x_predict_interpolation = x_predict[interpolation_mask]
-        x_predict_extrapolation = x_predict[~interpolation_mask]
-
-        # Initialize predictions
-        y_predict = np.zeros_like(x_predict)
-
-        # Fit the Ernest model
-        ernest = Ernest()
-        ernest.fit(x, y)
-
-        unique_scale_outs = np.unique(x).size
-
-        if unique_scale_outs <= 2:
-            # If very few data points, use the mean runtime
-            y_predict[:] = y.mean()
-        elif unique_scale_outs <= 5:
-            # If too few data points, use the Ernest model
-            y_predict[:] = ernest.predict(x_predict)
-        else:
-            # Use the Bell model for interpolation and Ernest for extrapolation
-            bell = Bell()
-            bell.fit(x, y)
-            y_predict[interpolation_mask] = bell.predict(x_predict_interpolation)
-            y_predict[~interpolation_mask] = ernest.predict(x_predict_extrapolation)
-
-        return y_predict.astype(int)
-
-
-class EllisApplication:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.db_path_app = None
-        self.client = None
-        self.db = None
-
-    def init(self, db_path):
-        self.db_path_app = db_path
-        self.client = MongoClient(db_path)
-        self.db = self.client.get_default_database()
-
-    def create_tables(self):
-        app_event_collection = self.db['app_event']
-        app_event_collection.create_index(
-            [('app_id', ASCENDING), ('started_at', ASCENDING)],
-            unique=True
-        )
-        app_event_collection.create_index('app_signature')
-
-        job_event_collection = self.db['job_event']
-        job_event_collection.create_index(
-            [('app_event_id', ASCENDING), ('job_id', ASCENDING)],
-            unique=True
-        )
-        job_event_collection.create_index('app_event_id')
-
-    def compute_initial_scale_out(self, db_path, app_event_id, app_signature, min_executors, max_executors,
-                                  target_runtime_ms):
-        self.logger.info(f"New request: {db_path}, {app_event_id}, {app_signature}, "
-                         f"{min_executors}, {max_executors}, {target_runtime_ms}")
-        if self.db_path_app != db_path:
-            self.init(db_path)
-        self.create_tables()
-        self.logger.info(f"Consider all database entries with App-Event-ID < {app_event_id}...")
-
-        scale_out = EllisUtils.compute_initial_scale_out(app_event_id, app_signature, min_executors, max_executors,
-                                                         target_runtime_ms)
-        self.logger.info(f"[App-Event-ID: {app_event_id}] Initial scale-out recommendation: {scale_out}")
-        return scale_out
