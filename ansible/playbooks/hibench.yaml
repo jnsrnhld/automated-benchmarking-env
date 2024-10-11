@@ -67,7 +67,10 @@
           # listener conf
           listener_jar: {{ lister_jar_full_path }}
           is_adaptive: {{ is_adaptive }}
-          bridgeServiceAddress: {{ bridgeServiceAddress }}
+          bridge_service_address: {{ bridge_service_address }}
+          initial_executors: {{ initial_executors }}
+          min_executors: {{ min_executors }}
+          max_executors: {{ max_executors }}
 
     - name: Run prepare script
       become_user: "{{ linux_username }}"
