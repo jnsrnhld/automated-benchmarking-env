@@ -31,7 +31,7 @@ workloads:
   - { name: "pagerank", enabled: false, category: "graph" }
 
 # configuration
-is_adaptive: false
-bridgeServiceAddress: "tcp://localhost:5555"
+is_adaptive: true
+bridgeServiceAddress: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_memory: 8192m
 executor_memory: 8192m
