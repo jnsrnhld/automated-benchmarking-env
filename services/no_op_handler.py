@@ -2,6 +2,7 @@ import uuid
 
 from event_handler import EventHandler, RequestMessage, ResponseMessage
 
+
 class NoOpEventHandler(EventHandler):
 
     def __init__(self, db):
@@ -15,9 +16,3 @@ class NoOpEventHandler(EventHandler):
 
     def handle_application_end(self, message: RequestMessage) -> ResponseMessage:
         return self.no_op_recommendation(message)
-
-    @staticmethod
-    def no_op_recommendation(message):
-        app_id = message.app_event_id or str(uuid.uuid4())
-        recommended_scale_out = message.num_executors
-        return ResponseMessage(app_event_id=app_id, recommended_scale_out=recommended_scale_out)
