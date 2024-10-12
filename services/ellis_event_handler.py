@@ -1,5 +1,3 @@
-import datetime
-
 from pymongo import ASCENDING
 from event_handler import EventHandler, RequestMessage, ResponseMessage
 from ellis_port.ellis_utils import EllisUtils
@@ -32,7 +30,7 @@ class EllisEventHandler(EventHandler):
         job_events = self.db['job_event']
         job_event = job_events.find_one({'app_event_id': message.app_event_id, 'job_id': message.job_id})
 
-        finished_at = EllisUtils.to_date_time(message.app_time)
+        finished_at = message.app_time
         duration = (finished_at - job_event['started_at']).total_seconds() * 1000
 
         job_events.update_one(
@@ -51,7 +49,7 @@ class EllisEventHandler(EventHandler):
         app_event_collection = self.db['app_event']
         app_event_collection.update_one(
             {'_id': message.app_event_id},
-            {'$set': {'finished_at': EllisUtils.to_date_time(message.app_time)}}
+            {'$set': {'finished_at': message.app_time}}
         )
 
         (scaleOuts, _) = self.ellis_utils.get_non_adaptive_runs(message.app_event_id, message.app_name)
@@ -73,7 +71,7 @@ class EllisEventHandler(EventHandler):
     def insert_app_event(self, message):
         app_event_document = {
             'app_id': message.app_name,
-            'started_at': EllisUtils.to_date_time(message.app_time),
+            'started_at': message.app_time,
         }
         app_event_collection = self.db['app_event']
         result = app_event_collection.insert_one(app_event_document)
@@ -84,7 +82,7 @@ class EllisEventHandler(EventHandler):
         job_event_document = {
             'app_event_id': app_event_id,
             'job_id': message.job_id,
-            'started_at': EllisUtils.to_date_time(message.app_time),
+            'started_at': message.app_time,
         }
         job_event_collection = self.db['job_event']
         job_event_collection.insert_one(job_event_document)

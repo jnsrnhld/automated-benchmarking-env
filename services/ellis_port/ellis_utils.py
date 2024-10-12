@@ -71,10 +71,6 @@ class EllisUtils:
         """
         self.db = db
 
-    @staticmethod
-    def to_date_time(time: int) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(time / 1000.0, datetime.timezone.utc)
-
     def compute_initial_scale_out(
             self,
             app_event_id: str,
@@ -234,7 +230,7 @@ class EllisUtils:
         return total_predicted_runtimes
 
     def update_scaleout(self, app_event_id: str, job_id: int, job_end_time: int, current_scale_out: int) -> int:
-        target_runtime_ms = 30000
+        target_runtime = 30000
         min_executors = 1
         max_executors = 10
 
@@ -260,11 +256,11 @@ class EllisUtils:
         next_job_runtimes = remaining_runtimes[0]
         future_jobs_runtimes = np.sum(remaining_runtimes[1:], axis=0)
 
-        current_runtime = (EllisUtils.to_date_time(job_end_time) - app_event['started_at']).total_seconds() * 1000
+        current_runtime = job_end_time - app_event['started_at']
         print(f"Current runtime: {current_runtime}")
         next_job_runtime = next_job_runtimes[current_scale_out - min_executors]
         print(f"Next job runtime: {next_job_runtime}")
-        remaining_target_runtime = target_runtime_ms - current_runtime - next_job_runtime
+        remaining_target_runtime = target_runtime - current_runtime - next_job_runtime
         print(f"Remaining target runtime: {remaining_target_runtime}")
         remaining_runtime_prediction = future_jobs_runtimes[current_scale_out - min_executors]
         print(f"Remaining runtime prediction: {remaining_runtime_prediction}")
