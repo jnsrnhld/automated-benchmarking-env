@@ -1,4 +1,3 @@
-import datetime
 import numpy as np
 from typing import Tuple
 from collections import defaultdict
@@ -230,19 +229,19 @@ class EllisUtils:
         return total_predicted_runtimes
 
     def update_scaleout(self, app_event_id: str, job_id: int, job_end_time: int, current_scale_out: int) -> int:
-        target_runtime = 30000
-        min_executors = 1
-        max_executors = 10
 
         app_event = self.db['app_event'].find_one({'_id': ObjectId(app_event_id)})
         app_signature = app_event['app_id']
+        app_start_time = app_event['started_at']
+        target_runtime = app_event['target_runtime']
+        min_executors = app_event['min_executors']
+        max_executors = app_event['max_executors']
+
         job_runtime_data = self.gather_job_runtime_data(app_event_id, app_signature)
-
         predicted_scale_outs = np.arange(min_executors, max_executors + 1)
+
         remaining_runtimes = []
-
         future_job_ids = sorted(k for k in job_runtime_data.keys() if k > job_id)
-
         for future_job_id in future_job_ids:
             x_y_tuples = job_runtime_data[future_job_id]
             x = np.array([t[0] for t in x_y_tuples])
@@ -256,7 +255,7 @@ class EllisUtils:
         next_job_runtimes = remaining_runtimes[0]
         future_jobs_runtimes = np.sum(remaining_runtimes[1:], axis=0)
 
-        current_runtime = job_end_time - app_event['started_at']
+        current_runtime = job_end_time - app_start_time
         print(f"Current runtime: {current_runtime}")
         next_job_runtime = next_job_runtimes[current_scale_out - min_executors]
         print(f"Next job runtime: {next_job_runtime}")

@@ -2,11 +2,11 @@ import argparse
 import pymongo
 
 from pymongo.database import Database
-from config import Config
-from server import ZeroMQServer
-from event_handler import EventHandler
-from no_op_handler import NoOpEventHandler
-from ellis_event_handler import EllisEventHandler
+from .config import Config
+from .server import ZeroMQServer
+from .event_handler import EventHandler
+from .no_op_handler import NoOpEventHandler
+from .ellis_port.ellis_event_handler import EllisEventHandler
 
 
 def connect_to_mongodb():
@@ -49,9 +49,15 @@ if __name__ == "__main__":
         default='NoOpEventHandler',
         help='Name of the event handler class to use (e.g., NoOpEventHandler)'
     )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=5555,
+        help='Port number to listen on (default: 5555)'
+    )
     args = parser.parse_args()
 
     mongodb = connect_to_mongodb()
     event_handler = get_event_handler(args.handler, mongodb)
-    server = ZeroMQServer(event_handler)
+    server = ZeroMQServer(event_handler, args.port)
     server.start()

@@ -1,6 +1,6 @@
 from pymongo import ASCENDING
-from event_handler import EventHandler, RequestMessage, ResponseMessage
-from ellis_port.ellis_utils import EllisUtils
+from ..event_handler import EventHandler, AppRequestMessage, JobRequestMessage, ResponseMessage
+from .ellis_utils import EllisUtils
 
 
 class EllisEventHandler(EventHandler):
@@ -9,29 +9,24 @@ class EllisEventHandler(EventHandler):
         self.create_tables()
         self.ellis_utils = EllisUtils(db)
 
-    def handle_job_start(self, message: RequestMessage) -> ResponseMessage:
+    def handle_application_start(self, message: AppRequestMessage) -> ResponseMessage:
+        app_id = self.insert_app_event(message)
+        return ResponseMessage(
+            app_event_id=app_id,
+            recommended_scale_out=message.initial_executors
+        )
 
-        if message.app_event_id:
-            self.insert_job_event(message.app_event_id, message)
-            return self.no_op_recommendation(message)
+    def handle_job_start(self, message: JobRequestMessage) -> ResponseMessage:
+        self.insert_job_event(message.app_event_id, message)
+        return self.no_op_recommendation(message)
 
-        else:
-            app_id = self.insert_app_event(message)
-            self.insert_job_event(app_id, message)
-
-            return ResponseMessage(
-                app_event_id=app_id,
-                # no changes nor calculations required on JOB_START
-                recommended_scale_out=message.num_executors
-            )
-
-    def handle_job_end(self, message: RequestMessage) -> ResponseMessage:
+    def handle_job_end(self, message: JobRequestMessage) -> ResponseMessage:
 
         job_events = self.db['job_event']
         job_event = job_events.find_one({'app_event_id': message.app_event_id, 'job_id': message.job_id})
 
         finished_at = message.app_time
-        duration = (finished_at - job_event['started_at']).total_seconds() * 1000
+        duration = finished_at - job_event['started_at']
 
         job_events.update_one(
             {'app_event_id': job_event['app_event_id'], 'job_id': job_event['job_id']},
@@ -44,7 +39,7 @@ class EllisEventHandler(EventHandler):
 
         return self.no_op_recommendation(message)
 
-    def handle_application_end(self, message: RequestMessage) -> ResponseMessage:
+    def handle_application_end(self, message: JobRequestMessage) -> ResponseMessage:
 
         app_event_collection = self.db['app_event']
         app_event_collection.update_one(
@@ -72,6 +67,10 @@ class EllisEventHandler(EventHandler):
         app_event_document = {
             'app_id': message.app_name,
             'started_at': message.app_time,
+            'target_runtime': message.target_runtime,
+            'initial_executors': message.initial_executors,
+            'min_executors': message.min_executors,
+            'max_executors': message.max_executors,
         }
         app_event_collection = self.db['app_event']
         result = app_event_collection.insert_one(app_event_document)

@@ -1,6 +1,7 @@
 import zmq
 
-from event_handler import EventHandler, EventType, RequestMessage, ResponseMessage
+from .event_handler import EventHandler, EventType, JobRequestMessage, ResponseMessage, MessageEnvelope, \
+    AppRequestMessage
 
 
 class ZeroMQServer:
@@ -8,7 +9,7 @@ class ZeroMQServer:
     ZeroMQ server that receives RequestMessages from clients and responds with ResponseMessages.
     """
 
-    def __init__(self, event_handler: EventHandler, port=5555):
+    def __init__(self, event_handler: EventHandler, port: int):
         self.port = port
         self.event_handler = event_handler
         self.context = zmq.Context()
@@ -20,9 +21,9 @@ class ZeroMQServer:
         try:
             while True:
                 message = self.socket.recv_string()
-                request_message = RequestMessage.from_json(message)
+                envelope = MessageEnvelope.from_json(message)
 
-                response_message = self.process_message(request_message)
+                response_message = self.process_message(envelope)
                 response_json = response_message.to_json()
                 self.socket.send_string(response_json)
 
@@ -32,21 +33,19 @@ class ZeroMQServer:
             self.socket.close()
             self.context.term()
 
-    def process_message(self, message: RequestMessage) -> ResponseMessage:
+    def process_message(self, envelope: MessageEnvelope) -> ResponseMessage:
         """
         Process the incoming request and delegate to the appropriate event handler method.
         """
-        event_type = message.event_type
-        print(f"Processing {event_type.value} event for "
-              f"app_id: {message.app_event_id} "
-              f"(job_id: {message.job_id})")
+        event_type = envelope.event_type
+        print(f"Processing {event_type.value} event")
 
-        if event_type == EventType.JOB_START:
+        if event_type == EventType.JOB_START or event_type == EventType.JOB_END:
+            message = JobRequestMessage.from_json(envelope.payload)
             return self.event_handler.handle_job_start(message)
-        elif event_type == EventType.JOB_END:
-            return self.event_handler.handle_job_end(message)
-        elif event_type == EventType.APPLICATION_END:
-            return self.event_handler.handle_application_end(message)
+        elif event_type == EventType.APPLICATION_START or event_type == EventType.APPLICATION_END:
+            message = AppRequestMessage.from_json(envelope.payload)
+            return self.event_handler.handle_application_start(message)
         else:
             print(f"Unknown event type: {event_type}")
             raise ValueError(f"Unknown event type: {event_type}")

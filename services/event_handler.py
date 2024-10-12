@@ -7,28 +7,60 @@ from abc import ABC, abstractmethod
 class EventType(Enum):
     JOB_START = "JOB_START"
     JOB_END = "JOB_END"
+    APPLICATION_START = "APPLICATION_START"
     APPLICATION_END = "APPLICATION_END"
 
 
 @dataclass
-class RequestMessage:
-    app_event_id: str
-    app_name: str
-    app_time: int
-    job_id: int
-    num_executors: int
+class MessageEnvelope:
     event_type: EventType
+    payload: dict
 
     @staticmethod
     def from_json(json_str):
         data = json.loads(json_str)
         data['event_type'] = EventType(data['event_type'])
-        return RequestMessage(**data)
+        return MessageEnvelope(**data)
 
     def to_json(self):
         data = asdict(self)
         data['event_type'] = self.event_type.value
         return json.dumps(data)
+
+
+@dataclass
+class AppRequestMessage:
+    app_name: str
+    app_time: int
+    target_runtime: int
+    initial_executors: int
+    min_executors: int
+    max_executors: int
+
+    @staticmethod
+    def from_json(json_str):
+        data = json.loads(json_str)
+        return AppRequestMessage(**data)
+
+    def to_json(self):
+        return json.dumps(asdict(self))
+
+
+@dataclass
+class JobRequestMessage:
+    app_event_id: str
+    app_name: str
+    app_time: int
+    job_id: int
+    num_executors: int
+
+    @staticmethod
+    def from_json(json_str):
+        data = json.loads(json_str)
+        return JobRequestMessage(**data)
+
+    def to_json(self):
+        return json.dumps(asdict(self))
 
 
 @dataclass
@@ -51,15 +83,19 @@ class EventHandler(ABC):
     """
 
     @abstractmethod
-    def handle_job_start(self, message: RequestMessage) -> ResponseMessage:
+    def handle_job_start(self, message: JobRequestMessage) -> ResponseMessage:
         pass
 
     @abstractmethod
-    def handle_job_end(self, message: RequestMessage) -> ResponseMessage:
+    def handle_job_end(self, message: JobRequestMessage) -> ResponseMessage:
         pass
 
     @abstractmethod
-    def handle_application_end(self, message: RequestMessage) -> ResponseMessage:
+    def handle_application_start(self, message: AppRequestMessage) -> ResponseMessage:
+        pass
+
+    @abstractmethod
+    def handle_application_end(self, message: AppRequestMessage) -> ResponseMessage:
         pass
 
     @staticmethod
