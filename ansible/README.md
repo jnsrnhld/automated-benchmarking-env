@@ -15,8 +15,8 @@ All the following commands are expected to be executed from project root directo
 ### Spark image
 
 Because HiBench does not support Spark versions later than 3.1.1 and there are no public available images of this 
-version which work with the kubeflow spark-operator (as of late 2024), you need to provide that spark image and set its
-name in the ansible [vars](vars.yaml) file.
+version which work with the kubeflow spark-operator (as of late 2024), you may provide a spark image with the desired 
+version and set its name in the ansible [vars](vars.yaml) file.
 
 Therefore, follow these step after cloning the [spark repository](https://github.com/apache/spark) and creating a 
 docker repository on dockerhub:
@@ -31,13 +31,6 @@ docker logout && docker login -u=$YOUR_DOCKERHUB_USERNAME
 bin/docker-image-tool.sh -r $YOUR_DOCKERHUB_USERNAME -t $VERSION_TAG build
 # push the image
 bin/docker-image-tool.sh -r $YOUR_DOCKERHUB_USERNAME -t $VERSION_TAG push
-```
-
-##### Prepare local python venv
-```shell
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 ```
 
 ## Software stack deployment using ansible
