@@ -38,8 +38,7 @@ class AppStartMessage:
     max_executors: int
 
     @staticmethod
-    def from_json(json_str):
-        data = json.loads(json_str)
+    def create(data):
         return AppStartMessage(**data)
 
     def to_json(self):
@@ -54,8 +53,7 @@ class AppEndMessage:
     num_executors: int
 
     @staticmethod
-    def from_json(json_str):
-        data = json.loads(json_str)
+    def create(data):
         return AppEndMessage(**data)
 
     def to_json(self):
@@ -71,8 +69,7 @@ class JobEventMessage:
     num_executors: int
 
     @staticmethod
-    def from_json(json_str):
-        data = json.loads(json_str)
+    def create(data):
         return JobEventMessage(**data)
 
     def to_json(self):
@@ -85,7 +82,7 @@ class ResponseMessage:
     recommended_scale_out: int
 
     @staticmethod
-    def from_json(json_str):
+    def create(json_str):
         data = json.loads(json_str)
         return ResponseMessage(**data)
 

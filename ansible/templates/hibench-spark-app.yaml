@@ -53,6 +53,10 @@ spec:
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
     "spark.customExtraListener.isAdaptive": "{{ is_adaptive }}"
     "spark.customExtraListener.bridgeServiceAddress": "{{ bridge_service_address }}"
+    "spark.customExtraListener.targetRuntime": "{{ target_runtime }}"
+    "spark.customExtraListener.initialExecutors": "{{ initial_executors }}"
+    "spark.customExtraListener.minExecutors": "{{ min_executors }}"
+    "spark.customExtraListener.maxExecutors": "{{ max_executors }}"
     # settings that allow for failure injection
     "spark.network.timeout": "20s"
     "spark.network.timeoutInterval": "20s"

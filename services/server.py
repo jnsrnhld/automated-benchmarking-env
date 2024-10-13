@@ -41,16 +41,16 @@ class ZeroMQServer:
         print(f"Processing {event_type.value} event")
 
         if event_type == EventType.JOB_START:
-            message = JobEventMessage.from_json(envelope.payload)
+            message = JobEventMessage.create(envelope.payload)
             return self.event_handler.handle_job_start(message)
         elif event_type == EventType.JOB_END:
-            message = JobEventMessage.from_json(envelope.payload)
+            message = JobEventMessage.create(envelope.payload)
             return self.event_handler.handle_job_end(message)
         elif event_type == EventType.APPLICATION_START:
-            message = AppStartMessage.from_json(envelope.payload)
+            message = AppStartMessage.create(envelope.payload)
             return self.event_handler.handle_application_start(message)
         elif event_type == EventType.APPLICATION_END:
-            message = AppEndMessage.from_json(envelope.payload)
+            message = AppEndMessage.create(envelope.payload)
             return self.event_handler.handle_application_end(message)
         else:
             print(f"Unknown event type: {event_type}")

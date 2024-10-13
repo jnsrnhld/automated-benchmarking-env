@@ -35,6 +35,7 @@ is_adaptive: true
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_memory: 8192m
 executor_memory: 8192m
+target_runtime: 30000
 initial_executors: 1
 min_executors: 1
 max_executors: 10

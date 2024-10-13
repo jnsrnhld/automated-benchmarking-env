@@ -68,6 +68,7 @@
           listener_jar: {{ lister_jar_full_path }}
           is_adaptive: {{ is_adaptive }}
           bridge_service_address: {{ bridge_service_address }}
+          target_runtime: {{ target_runtime }}
           initial_executors: {{ initial_executors }}
           min_executors: {{ min_executors }}
           max_executors: {{ max_executors }}
