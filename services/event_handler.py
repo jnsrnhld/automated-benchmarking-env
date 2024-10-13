@@ -29,7 +29,7 @@ class MessageEnvelope:
 
 
 @dataclass
-class AppRequestMessage:
+class AppStartMessage:
     app_name: str
     app_time: int
     target_runtime: int
@@ -40,14 +40,30 @@ class AppRequestMessage:
     @staticmethod
     def from_json(json_str):
         data = json.loads(json_str)
-        return AppRequestMessage(**data)
+        return AppStartMessage(**data)
 
     def to_json(self):
         return json.dumps(asdict(self))
 
 
 @dataclass
-class JobRequestMessage:
+class AppEndMessage:
+    app_event_id: str
+    app_name: str
+    app_time: int
+    num_executors: int
+
+    @staticmethod
+    def from_json(json_str):
+        data = json.loads(json_str)
+        return AppEndMessage(**data)
+
+    def to_json(self):
+        return json.dumps(asdict(self))
+
+
+@dataclass
+class JobEventMessage:
     app_event_id: str
     app_name: str
     app_time: int
@@ -57,7 +73,7 @@ class JobRequestMessage:
     @staticmethod
     def from_json(json_str):
         data = json.loads(json_str)
-        return JobRequestMessage(**data)
+        return JobEventMessage(**data)
 
     def to_json(self):
         return json.dumps(asdict(self))
@@ -83,24 +99,56 @@ class EventHandler(ABC):
     """
 
     @abstractmethod
-    def handle_job_start(self, message: JobRequestMessage) -> ResponseMessage:
+    def handle_application_start(self, message: AppStartMessage) -> ResponseMessage:
         pass
 
     @abstractmethod
-    def handle_job_end(self, message: JobRequestMessage) -> ResponseMessage:
+    def handle_job_start(self, message: JobEventMessage) -> ResponseMessage:
         pass
 
     @abstractmethod
-    def handle_application_start(self, message: AppRequestMessage) -> ResponseMessage:
+    def handle_job_end(self, message: JobEventMessage) -> ResponseMessage:
         pass
 
     @abstractmethod
-    def handle_application_end(self, message: AppRequestMessage) -> ResponseMessage:
+    def handle_application_end(self, message: AppEndMessage) -> ResponseMessage:
         pass
 
     @staticmethod
-    def no_op_recommendation(message):
+    def no_op_app_start_response(message: AppStartMessage) -> ResponseMessage:
+        return ResponseMessage(
+            app_event_id="No_op_recommendation",
+            recommended_scale_out=message.initial_executors,
+        )
+
+    @staticmethod
+    def no_op_app_end_response(message: AppEndMessage) -> ResponseMessage:
+        return ResponseMessage(
+            app_event_id="No_op_recommendation",
+            recommended_scale_out=message.num_executors,
+        )
+
+    @staticmethod
+    def no_op_job_event_recommendation(message: JobEventMessage) -> ResponseMessage:
         return ResponseMessage(
             app_event_id=message.app_event_id,
             recommended_scale_out=message.num_executors
         )
+
+
+class NoOpEventHandler(EventHandler):
+
+    def __init__(self, db):
+        pass
+
+    def handle_application_start(self, message: AppStartMessage) -> ResponseMessage:
+        return self.no_op_app_start_response(message)
+
+    def handle_job_start(self, message: JobEventMessage) -> ResponseMessage:
+        return self.no_op_job_event_recommendation(message)
+
+    def handle_job_end(self, message: JobEventMessage) -> ResponseMessage:
+        return self.no_op_job_event_recommendation(message)
+
+    def handle_application_end(self, message: AppEndMessage) -> ResponseMessage:
+        return self.no_op_app_end_response(message)

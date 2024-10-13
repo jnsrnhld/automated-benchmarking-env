@@ -1,7 +1,7 @@
 import zmq
 
-from .event_handler import EventHandler, EventType, JobRequestMessage, ResponseMessage, MessageEnvelope, \
-    AppRequestMessage
+from .event_handler import EventHandler, EventType, JobEventMessage, ResponseMessage, MessageEnvelope, \
+    AppStartMessage, AppEndMessage
 
 
 class ZeroMQServer:
@@ -40,12 +40,18 @@ class ZeroMQServer:
         event_type = envelope.event_type
         print(f"Processing {event_type.value} event")
 
-        if event_type == EventType.JOB_START or event_type == EventType.JOB_END:
-            message = JobRequestMessage.from_json(envelope.payload)
+        if event_type == EventType.JOB_START:
+            message = JobEventMessage.from_json(envelope.payload)
             return self.event_handler.handle_job_start(message)
-        elif event_type == EventType.APPLICATION_START or event_type == EventType.APPLICATION_END:
-            message = AppRequestMessage.from_json(envelope.payload)
+        elif event_type == EventType.JOB_END:
+            message = JobEventMessage.from_json(envelope.payload)
+            return self.event_handler.handle_job_end(message)
+        elif event_type == EventType.APPLICATION_START:
+            message = AppStartMessage.from_json(envelope.payload)
             return self.event_handler.handle_application_start(message)
+        elif event_type == EventType.APPLICATION_END:
+            message = AppEndMessage.from_json(envelope.payload)
+            return self.event_handler.handle_application_end(message)
         else:
             print(f"Unknown event type: {event_type}")
             raise ValueError(f"Unknown event type: {event_type}")
