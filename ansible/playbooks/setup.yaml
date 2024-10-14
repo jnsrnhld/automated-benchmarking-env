@@ -43,8 +43,34 @@
     - ../vars.yaml
   become: true
   tasks:
+    - name: Add deadsnakes PPA (for newer Python versions)
+      apt_repository:
+        repo: ppa:deadsnakes/ppa
+        state: present
+
+    - name: Update apt cache after adding deadsnakes PPA
+      apt:
+        update_cache: yes
+
+    - name: Install Python {{ python_version }}
+      apt:
+        name: python{{ python_version }}
+        state: present
+
+    - name: Install Python {{ python_version }} development headers (optional but recommended)
+      apt:
+        name: python{{ python_version }}-dev
+        state: present
+
+    - name: Set Python {{ python_version }} as the default version of python3 (optional)
+      update_alternatives:
+        name: python3
+        link: /usr/bin/python3
+        path: /usr/bin/python{{ python_version }}
+        priority: 1
+
     - name: Check if pip is installed
-      command: python3 -m pip -V
+      command: python{{ python_version }} -m pip -V
       register: pip_installed
       ignore_errors: true
 
@@ -56,12 +82,12 @@
       when: pip_installed.failed
 
     - name: Run pip installer
-      command: python3 /tmp/get-pip.py --user
+      command: python{{ python_version }} /tmp/get-pip.py --user
       when: pip_installed.failed
 
-    - name: Ensure python3-venv is installed
+    - name: Ensure python{{ python_version }}-venv is installed
       apt:
-        name: python3-venv
+        name: python{{ python_version }}-venv
         state: present
         force_apt_get: true
         update_cache: true

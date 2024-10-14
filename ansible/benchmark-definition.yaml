@@ -12,7 +12,7 @@ workloads:
   - { name: "terasort", enabled: false, category: "micro" }
   - { name: "wordcount", enabled: false, category: "micro" }
   # MACHINE LEARNING
-  - { name: "als", enabled: true, category: "ml" }
+  - { name: "als", enabled: false, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
   - { name: "gbt", enabled: false, category: "ml" }
   - { name: "gmm", enabled: false, category: "ml" }
@@ -32,10 +32,11 @@ workloads:
 
 # configuration
 is_adaptive: true
+skip_data_generation: false
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
-driver_memory: 8192m
-executor_memory: 8192m
+driver_memory: 4096m
+executor_memory: 4096m
 target_runtime: 30000
-initial_executors: 1
+initial_executors: 2
 min_executors: 1
 max_executors: 10

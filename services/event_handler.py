@@ -38,7 +38,7 @@ class AppStartMessage:
     max_executors: int
 
     @staticmethod
-    def create(data):
+    def create(data: dict):
         return AppStartMessage(**data)
 
     def to_json(self):
@@ -53,7 +53,7 @@ class AppEndMessage:
     num_executors: int
 
     @staticmethod
-    def create(data):
+    def create(data: dict):
         return AppEndMessage(**data)
 
     def to_json(self):
@@ -69,7 +69,7 @@ class JobEventMessage:
     num_executors: int
 
     @staticmethod
-    def create(data):
+    def create(data: dict):
         return JobEventMessage(**data)
 
     def to_json(self):

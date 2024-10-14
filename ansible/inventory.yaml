@@ -2,13 +2,13 @@
 remote:
   hosts:
     leaderNode:
-      ansible_host: 34.32.57.222
+      ansible_host: 34.32.77.215
       ip: 10.240.0.10
     workerNode1:
-      ansible_host: 34.32.6.24
+      ansible_host: 34.32.15.133
       ip: 10.240.0.20
 #    workerNode2:
-#      ansible_host: 34.32.57.222
+#      ansible_host: 34.32.77.215
 
 # 1 host coordinating k8s via kubectl/helm, running bridge service, scaling services, database, etc.
 leader:

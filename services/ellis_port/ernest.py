@@ -1,12 +1,26 @@
 import numpy as np
 from scipy.optimize import nnls
-from .univariate_predictor import UnivariatePredictor
+
+from services.ellis_port.univariate_predictor import UnivariatePredictor
 
 
 def feature_map(x: np.ndarray) -> np.ndarray:
+    epsilon = 1e-10  # Small value to avoid division by zero and log(0)
+
     ones = np.ones_like(x)
-    x = np.vstack([ones, ones / x, np.log(x), x]).T
-    return x
+
+    # Replace 0 values in x with epsilon to avoid division by zero and log(0)
+    x_safe = np.where(x == 0, epsilon, x)
+
+    # Feature mapping
+    x_mapped = np.vstack([
+        ones,  # Constant term
+        ones / x_safe,  # 1/x
+        np.log(x_safe),  # log(x)
+        x  # x itself
+    ]).T
+
+    return x_mapped
 
 
 class Ernest(UnivariatePredictor):
@@ -16,23 +30,22 @@ class Ernest(UnivariatePredictor):
     def _fit(self, x: np.ndarray, y: np.ndarray) -> 'Ernest':
         if len(x) != len(y):
             raise ValueError("Vectors x and y must have the same length!")
-        x = feature_map(x)
-
-        # When x is entirely ones, the resulting feature matrix has only one unique row, meaning it has rank 1 (despite
-        # having more rows), leading to a singular matrix when attempting least squares or NNLS.
-        # In this case, we directly compute the mean of y and set the coefficients accordingly.
-        if np.all(x == x[0]):
-            print(f"Ernest#fit: x is entirely ones. Using mean y value.")
-            self.coefficients = np.mean(y)
-            return self
-        else:
-            xtx = np.dot(x.T, x)
-            xty = np.dot(x.T, y)
-            self.coefficients, _ = nnls(xtx, xty)
-            return self
+        X = feature_map(x)
+        A = X.T @ X
+        b = X.T @ y
+        (result, _) = nnls(A, b, maxiter=max(400, len(b)), atol=Ernest.compute_atol(A))
+        self.coefficients = result
+        return self
 
     def _predict(self, x: np.ndarray) -> np.ndarray:
         if self.coefficients is None:
             raise Exception("Model has not been fitted yet!")
-        x = feature_map(x)
-        return x @ self.coefficients
+        _x = feature_map(x)
+        return _x @ self.coefficients
+
+    @staticmethod
+    def compute_atol(A: np.ndarray) -> float:
+        m, n = A.shape
+        norm_A_1 = np.linalg.norm(A, 1)
+        atol = max(m, n) * norm_A_1 * np.spacing(1.) * 1e4
+        return atol

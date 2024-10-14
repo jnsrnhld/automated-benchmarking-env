@@ -11,9 +11,13 @@ class EllisEventHandler(EventHandler):
 
     def handle_application_start(self, message: AppStartMessage) -> ResponseMessage:
         app_id = self.insert_app_event(message)
+        initial_scaleout = self.ellis_utils.compute_initial_scale_out(
+            app_id, message.app_name, message.min_executors, message.max_executors, message.target_runtime
+        )
+        print(f"Recommending initial scale out: {initial_scaleout}")
         return ResponseMessage(
             app_event_id=app_id,
-            recommended_scale_out=message.initial_executors
+            recommended_scale_out=initial_scaleout
         )
 
     def handle_job_start(self, message: JobEventMessage) -> ResponseMessage:
