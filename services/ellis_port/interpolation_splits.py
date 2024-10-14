@@ -2,42 +2,46 @@ import numpy as np
 
 
 class InterpolationSplits:
-    def __init__(self, x: np.ndarray, y: np.ndarray):
+    """
+    An iterable class that generates training and testing splits for interpolation tasks.
+    """
+
+    def __init__(self, x, y):
+        """
+        Initializes the class with input feature array x and target array y.
+
+        Parameters:
+        x (np.ndarray): Input feature array.
+        y (np.ndarray): Target array.
+        """
         self.x = x
         self.y = y
-
-        # Unique x values
-        self.x_unique = np.unique(x)
-
-        # Interpolation values: exclude the first and last unique x values
-        self.x_interpolation = self.x_unique[1:-1]
-
-        # Number of interpolation points
-        self.n = len(self.x_interpolation)
-
-        # Iterator index
-        self.i = 0
+        self.xu = np.unique(x)[1:-1]  # Unique values of x, excluding the first and last
+        self.n_iter = self.xu.size    # Number of iterations (splits)
+        self.i_iter = 0               # Iteration counter
 
     def __iter__(self):
+        """
+        Returns the iterator object.
+
+        Returns:
+        self: The iterator instance.
+        """
         return self
 
     def __next__(self):
-        if self.i >= self.n:
+        """
+        Generates the next train-test split in the iteration.
+
+        Returns:
+        Tuple: Training and testing splits (xtrain, ytrain, xtest, ytest).
+        """
+        if self.i_iter == self.n_iter:
             raise StopIteration
 
-        # Create mask for current interpolation point
-        mask = self.x == self.x_interpolation[self.i]
+        m = self.x == self.xu[self.i_iter]
+        xtrain, ytrain = self.x[~m], self.y[~m]
+        xtest, ytest = self.x[m], self.y[m]
 
-        # Training data: all points not matching the current interpolation point
-        x_train = self.x[~mask]
-        y_train = self.y[~mask]
-
-        # Test data: points matching the current interpolation point
-        x_test = self.x[mask]
-        y_test = self.y[mask]
-
-        # Move to the next interpolation point
-        self.i += 1
-
-        # Return the training and test data as tuples
-        return x_train, y_train, x_test, y_test
+        self.i_iter += 1
+        return xtrain, xtest, ytrain, ytest

@@ -1,145 +1,76 @@
-from .univariate_predictor import UnivariatePredictor
 import numpy as np
+import scipy as sp
 
+from .univariate_predictor import UnivariatePredictor
+from .cross_validation import cross_validation_score
+from .interpolation_splits import InterpolationSplits
 
 class KernelRegression(UnivariatePredictor):
     """
-    Kernel Regression model implementing univariate regression with locally weighted linear regression.
-
-    Parameters
-    ----------
-    degree : int, optional
-        The degree of the polynomial features. Default is 1.
-    bandwidth : float, optional
-        The bandwidth parameter for the kernel. Default is 1.0.
-    tolerance : float, optional
-        Regularization parameter to avoid singular matrices. Default is machine epsilon.
-
-    Examples
-    --------
-    ```python
-    # Create a KernelRegression instance
-    predictor = KernelRegression(degree=2, bandwidth=1.0)
-
-    # Fit the model
-    predictor.fit(x_train, y_train)
-
-    # Predict new values
-    y_pred = predictor.predict(x_test)
-    ```
+    Kernel regression model for univariate data, supports polynomial feature mapping.
     """
-
-    def __init__(self, degree=1, bandwidth=1.0, tolerance=np.finfo(float).eps):
+    def __init__(self, bw=None, degree=1, tol=np.finfo(np.float64).eps):
+        self.bw = bw
         self.degree = degree
-        self.bandwidth = bandwidth
-        self.tolerance = tolerance
-        self.x = None
-        self.y = None
+        self.tol = tol
 
-    def _fit(self, x: np.ndarray, y: np.ndarray):
-        if x.shape[0] != y.shape[0]:
-            raise ValueError("Vectors x and y must have the same length!")
+    def _fmap(self, x):
+        """
+        Maps input x to polynomial features of the given degree.
+
+        Parameters:
+        x (np.ndarray): Input feature array.
+
+        Returns:
+        np.ndarray: Feature mapped array.
+        """
+        return np.vstack([x**i for i in range(self.degree+1)]).T
+
+    def _predict_single(self, X, y, x, w):
+        """
+        Predicts output using the kernel regression model.
+
+        Parameters:
+        x (np.ndarray): Input feature array.
+
+        Returns:
+        np.ndarray: Predicted values.
+        """
+        XTW = X.T * w
+        c = np.linalg.solve(np.dot(XTW, X)+self.tol*np.eye(X.shape[1]), np.dot(XTW, y))
+        ypred = np.dot(x, c)
+        return ypred
+
+    def __predict(self, X, y, Xpred, W):
+        n, d = Xpred.shape
+        ypred = np.zeros(n)
+        for i in range(n):
+            ypred[i] = self._predict_single(X, y, Xpred[i], W[i])
+        return ypred
+
+    def _fit(self, x, y):
+        if self.bw is None:
+            models = [KernelRegression(bw=bw) for bw in np.linspace(1, 100, 100)]
+            scores = cross_validation_score(models, InterpolationSplits(x, y))
+            scores = np.mean(scores, axis=1)
+            idx = np.argmin(scores)
+            self._bw = models[idx].bw
+        else:
+            self._bw = self.bw
 
         self.x = x
         self.y = y
-
         return self
 
-    def _predict(self, x_predict: np.ndarray) -> np.ndarray:
-        if self.x is None or self.y is None:
-            raise ValueError("Model has not been fitted yet!")
+    def _predict(self, xs):
+        xs = np.atleast_1d(xs)
+        x, y, h = self.x, self.y, self._bw
 
-        x_train = self.x
-        y_train = self.y
+        D = sp.spatial.distance.cdist(np.atleast_2d(xs).T, np.atleast_2d(x).T, metric='sqeuclidean')
+        W = np.exp(-D/(2*h**2))
 
-        n_predict = x_predict.shape[0]
-        n_train = x_train.shape[0]
+        X = self._fmap(x)
+        X0 = self._fmap(xs)
 
-        # Compute the weight matrix
-        diff = x_predict[:, np.newaxis] - x_train[np.newaxis, :]
-        weight_matrix = np.exp(- (diff ** 2) / (2 * self.bandwidth ** 2))
-
-        # Map features
-        X = self._feature_map(x_train)
-        X_predict = self._feature_map(x_predict)
-
-        # Predict values
-        y_predict = self._predict_values(X, y_train, X_predict, weight_matrix)
-
-        return y_predict
-
-    def _feature_map(self, x: np.ndarray) -> np.ndarray:
-        """
-        Maps the input data to polynomial features up to the specified degree.
-
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Input data array.
-
-        Returns
-        -------
-        x_mapped : numpy.ndarray
-            Mapped feature array.
-        """
-        x_mapped = np.zeros((x.shape[0], self.degree + 1))
-        for i in range(self.degree + 1):
-            x_mapped[:, i] = x ** i
-        return x_mapped
-
-    def _predict_values(self, X: np.ndarray, y: np.ndarray, X_predict: np.ndarray, W: np.ndarray) -> np.ndarray:
-        """
-        Predicts the target values for the given feature matrix and weight matrix.
-
-        Parameters
-        ----------
-        X : numpy.ndarray
-            Training feature matrix.
-        y : numpy.ndarray
-            Training target vector.
-        X_predict : numpy.ndarray
-            Feature matrix for prediction.
-        W : numpy.ndarray
-            Weight matrix.
-
-        Returns
-        -------
-        y_pred : numpy.ndarray
-            Predicted target values.
-        """
-        y_pred = np.zeros(X_predict.shape[0])
-        for i in range(y_pred.shape[0]):
-            y_pred[i] = self._predict_single(X, y, X_predict[i, :], W[i, :])
-        return y_pred
-
-    def _predict_single(self, X: np.ndarray, y: np.ndarray, x: np.ndarray, w: np.ndarray) -> float:
-        """
-        Predicts a single target value using locally weighted linear regression.
-
-        Parameters
-        ----------
-        X : numpy.ndarray
-            Training feature matrix.
-        y : numpy.ndarray
-            Training target vector.
-        x : numpy.ndarray
-            Single feature vector for prediction.
-        w : numpy.ndarray
-            Weight vector for the training samples.
-
-        Returns
-        -------
-        y_pred : float
-            Predicted target value.
-        """
-        # Compute the weighted normal equations components
-        xtx = X.T @ (w[:, np.newaxis] * X) + self.tolerance * np.eye(X.shape[1])
-        xty = X.T @ (w * y)
-
-        # Solve for coefficients
-        c = np.linalg.solve(xtx, xty)
-
-        # Compute prediction
-        y_pred = x @ c
-
-        return y_pred
+        ypred = self.__predict(X, y, X0, W)
+        return ypred

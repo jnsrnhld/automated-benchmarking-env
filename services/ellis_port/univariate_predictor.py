@@ -3,92 +3,54 @@ import numpy as np
 
 class UnivariatePredictor(ABC):
     """
-    This class provides a basic interface for univariate predictors.
-    The following example shows general usage of such predictors:
-
-    ```python
-    # create a concrete predictor
-    predictor = ConcretePredictor()
-
-    # train the model using training data
-    x_train, y_train = get_training_data()
-    predictor.fit(x_train, y_train)
-
-    # now the model can be used for prediction
-    x_test, y_test = get_test_data()
-    y_predict = predictor.predict(x_test)
-    ```
+    This class provides a basic abstract interface for univariate predictors.
     """
-
-    def fit(self, x, y):
-        """
-        Fits the model to the training data.
-
-        Parameters
-        ----------
-        x : array-like
-            An array-like object containing the one-dimensional (univariate) data samples.
-        y : array-like
-            An array-like object containing the target values.
-
-        Returns
-        -------
-        self : UnivariatePredictor
-            A reference to itself.
-        """
-        x = np.asarray(x)
-        y = np.asarray(y)
-        return self._fit(x, y)
 
     @abstractmethod
     def _fit(self, x: np.ndarray, y: np.ndarray):
         """
-        Internal method to be implemented by subclasses.
+        Abstract method to fit the model to the data.
 
-        Parameters
-        ----------
-        x : numpy.ndarray
-            A numpy array containing the one-dimensional (univariate) data samples.
-        y : numpy.ndarray
-            A numpy array containing the target values.
-
-        Returns
-        -------
-        self : UnivariatePredictor
-            A reference to itself.
+        Parameters:
+        x (np.ndarray): Input feature array.
+        y (np.ndarray): Target array.
         """
         pass
 
-    def predict(self, x):
+    def fit(self, x: np.ndarray, y: np.ndarray):
         """
-        Predicts the values for the given set of values.
+        Public method to fit the model, calling the underlying abstract _fit method.
 
-        Parameters
-        ----------
-        x : array-like
-            An array-like object containing the one-dimensional (univariate) data samples for which the target values are predicted.
+        Parameters:
+        x (np.ndarray): Input feature array.
+        y (np.ndarray): Target array.
 
-        Returns
-        -------
-        y_pred : numpy.ndarray
-            A numpy array containing the predicted values.
+        Returns:
+        self: The fitted model instance.
         """
-        x = np.asarray(x)
-        return self._predict(x)
+        return self._fit(x, y)
 
     @abstractmethod
     def _predict(self, x: np.ndarray) -> np.ndarray:
         """
-        Internal method to be implemented by subclasses.
+        Abstract method to predict the target values based on the input data.
 
-        Parameters
-        ----------
-        x : numpy.ndarray
-            A numpy array containing the one-dimensional (univariate) data samples.
+        Parameters:
+        x (np.ndarray): Input feature array.
 
-        Returns
-        -------
-        y_pred : numpy.ndarray
-            A numpy array containing the predicted values.
+        Returns:
+        np.ndarray: Predicted values.
         """
         pass
+
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        """
+        Public method to predict the target values, calling the underlying abstract _predict method.
+
+        Parameters:
+        x (np.ndarray): Input feature array.
+
+        Returns:
+        np.ndarray: Predicted values.
+        """
+        return self._predict(x)

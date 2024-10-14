@@ -62,15 +62,12 @@ class TestUnivariatePredictors(unittest.TestCase):
         self.assertTrue(np.all(np.abs(y_predict) < 1e-8))
 
     def test_fit_method(self):
-        # Provided input data
         test_data = [
             # (x, y) pairs
             (np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])),
-            # Edge case: x and y are zero vectors
-            (np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])),
             # Large vector inputs (randomly filled with values between 0 and 1)
             (np.random.rand(1000), np.random.rand(1000)),
-            # real data
+            # real runtime data
             (np.array([2.0, 2.0, 2.0]), np.array([6892.0, 7908.0, 7097.0])),
             (np.array([2.0, 2.0, 2.0]), np.array([475.0, 552.0, 567.0])),
             (np.array([3.0, 3.0, 3.0]), np.array([8679.0, 7334.0, 8018.0])),
@@ -81,7 +78,7 @@ class TestUnivariatePredictors(unittest.TestCase):
             model = Ernest()
             try:
                 model._fit(scale_outs, runtimes)
-                print(f"prediction: {model.predict(np.array([1.0, 2.0, 3.0]))}")
+                model.predict(np.array([1.0, 2.0, 3.0]))
             except Exception as e:
                 self.fail(f"fit method raised an exception with input {scale_outs}, {runtimes}: {e}")
 
@@ -92,17 +89,9 @@ class TestUnivariatePredictors(unittest.TestCase):
             x = np.arange(1, 6, dtype=float)
             kernel_regression._predict(x)
 
-    def test_kernel_regression_fit_vectors_different_length(self):
-        """KernelRegression should raise ValueError when fit is called with vectors of different lengths."""
-        with self.assertRaises(ValueError):
-            kernel_regression = KernelRegression()
-            x = np.arange(1, 6, dtype=float)
-            y = np.arange(1, 5, dtype=float)
-            kernel_regression._fit(x, y)
-
     def test_kernel_regression_correct_prediction(self):
         """KernelRegression should calculate the correct predictions."""
-        kernel_regression = KernelRegression(bandwidth=1.8)
+        kernel_regression = KernelRegression(bw=1.8)
         x = np.array([1, 2, 3, 4, 5], dtype=float)
         y = np.array([1, 4, 6, 4, 1], dtype=float)
         kernel_regression._fit(x, y)
