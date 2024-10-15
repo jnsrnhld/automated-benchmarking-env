@@ -1,7 +1,7 @@
 import zmq
 
-from .event_handler import EventHandler, EventType, JobEventMessage, ResponseMessage, MessageEnvelope, \
-    AppStartMessage, AppEndMessage
+from .event_handler import EventHandler, EventType, ResponseMessage, MessageEnvelope, \
+    AppStartMessage, AppEndMessage, JobStartMessage, JobEndMessage
 
 
 class ZeroMQServer:
@@ -41,10 +41,10 @@ class ZeroMQServer:
         print(f"Processing {event_type.value} event")
 
         if event_type == EventType.JOB_START:
-            message = JobEventMessage.create(envelope.payload)
+            message = JobStartMessage.create(envelope.payload)
             return self.event_handler.handle_job_start(message)
         elif event_type == EventType.JOB_END:
-            message = JobEventMessage.create(envelope.payload)
+            message = JobEndMessage.create(envelope.payload)
             return self.event_handler.handle_job_end(message)
         elif event_type == EventType.APPLICATION_START:
             message = AppStartMessage.create(envelope.payload)

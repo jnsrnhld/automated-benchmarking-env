@@ -13,16 +13,16 @@ spec:
     {% for argument in arguments -%}
     - "{{ argument }}"
     {% endfor %}
-  sparkVersion: {{ spark_version }}
+  sparkVersion: "{{ spark_version }}"
   restartPolicy:
     type: Never
   monitoring:
     exposeDriverMetrics: true
     exposeExecutorMetrics: true
   driver:
-    memory: {{ driver_memory }}
+    memory: "{{ driver_memory }}"
     labels:
-      version: {{ spark_version }}
+      version: "{{ spark_version }}"
     serviceAccount: spark-operator-spark
     configMaps:
       - name: hibench-config
@@ -31,9 +31,9 @@ spec:
       - name: SPARKBENCH_PROPERTIES_FILES
         value: /mnt/config-maps/hibench.conf
   executor:
-    memory: {{ executor_memory }}
+    memory: "{{ executor_memory }}"
     labels:
-      version: {{ spark_version }}
+      version: "{{ spark_version }}"
     configMaps:
       - name: hibench-config
         path: /mnt/config-maps

@@ -28,8 +28,12 @@ class Ernest(UnivariatePredictor):
         self: The fitted model with updated coefficients.
         """
         X = self._fmap(x)
-        (coeff, _) = nnls(X, y)
-        self.coeff = coeff
+        try:
+            (coeff, _) = nnls(X, y)
+            self.coeff = coeff
+        except:
+            # prevents matrix is singular error
+            self.coeff = np.mean(y)
         return self
 
     def _predict(self, x: np.ndarray):

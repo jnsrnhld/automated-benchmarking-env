@@ -8,14 +8,14 @@
   become_user: "{{ linux_username }}"
   tasks:
     # TODO remove after fixing, already present in setup
-#    - name: Copy the JAR file to remote machine
-#      synchronize:
-#        src: "{{ lookup('env', 'PWD') }}/ansible/jars/{{ listener_jar }}"
-#        dest: "/tmp/{{ listener_jar }}"
-#        delete: yes
-#
-#    - name: Copy jar to user dir
-#      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f /tmp/{{ listener_jar }} {{ hdfs_user_dir }}"
+    - name: Copy the JAR file to remote machine
+      synchronize:
+        src: "{{ lookup('env', 'PWD') }}/ansible/jars/{{ listener_jar }}"
+        dest: "/tmp/{{ listener_jar }}"
+        delete: yes
+
+    - name: Copy jar to user dir
+      command: "{{ hadoop_dir }}/bin/hdfs dfs -put -f /tmp/{{ listener_jar }} {{ hdfs_user_dir }}"
 
     - name: Template Hadoop config
       template:

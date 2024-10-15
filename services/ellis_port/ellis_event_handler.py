@@ -1,5 +1,5 @@
 from pymongo import ASCENDING
-from ..event_handler import EventHandler, AppStartMessage, JobEventMessage, ResponseMessage, AppEndMessage
+from ..event_handler import EventHandler, AppStartMessage, JobStartMessage, JobEndMessage, ResponseMessage, AppEndMessage
 from .ellis_utils import EllisUtils
 
 
@@ -20,11 +20,11 @@ class EllisEventHandler(EventHandler):
             recommended_scale_out=initial_scaleout
         )
 
-    def handle_job_start(self, message: JobEventMessage) -> ResponseMessage:
+    def handle_job_start(self, message: JobStartMessage) -> ResponseMessage:
         self.insert_job_event(message.app_event_id, message)
         return self.no_op_job_event_recommendation(message)
 
-    def handle_job_end(self, message: JobEventMessage) -> ResponseMessage:
+    def handle_job_end(self, message: JobEndMessage) -> ResponseMessage:
         self.update_job_event(message)
 
         (scaleOuts, _) = self.ellis_utils.get_non_adaptive_runs(message.app_event_id, message.app_name)

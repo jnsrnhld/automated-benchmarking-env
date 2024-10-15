@@ -16,7 +16,8 @@ def parse_input_string(input_string: str) -> dict:
     """
 
     # the prepare.sh script might echo other stuff that we discard
-    trimmed = re.search(r'com\.intel\.hibench.*', input_string).group(0)
+    # all test apps are part of hibench or spark package
+    trimmed = re.search(r'(com\.intel\.hibench|org\.apache\.spark).*', input_string).group(0)
 
     parts = trimmed.split()
     main_class = parts[0]
