@@ -2,10 +2,15 @@
 
 ## Prerequisites
 
-### Python venv
-1. Create a venv for ansible (and for running/developing the operator locally) `python3 -m venv venv`
-2. Activate the venv `source venv/bin/activate`
-3. Install requirements for ansible (and operator) `pip install -U -r ansible/requirements.txt` (`pip install -U -r operator/requirements.txt`)
+## Install python dependencies
+
+```bash
+# setup virtual environment
+python3 -m venv ansible_venv
+source ansible_venv/bin/activate
+# or just install dependencies for ansible
+pip install -r ansible/requirements.txt
+```
 
 ### k8s cluster
 

@@ -1,5 +1,5 @@
 from pymongo import ASCENDING
-from ..event_handler import EventHandler, AppStartMessage, JobStartMessage, JobEndMessage, ResponseMessage, AppEndMessage
+from services.event_handler import EventHandler, AppStartMessage, JobStartMessage, JobEndMessage, ResponseMessage, AppEndMessage
 from .ellis_utils import EllisUtils
 
 

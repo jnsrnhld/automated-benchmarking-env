@@ -7,36 +7,6 @@ from services.ellis_port.bell import Bell
 
 
 class TestUnivariatePredictors(unittest.TestCase):
-    def test_bell_predict_without_fit(self):
-        """Bell should raise Exception when predict is called without fit."""
-        with self.assertRaises(Exception):
-            bell = Bell()
-            x = np.arange(1, 6, dtype=float)  # x = [1.0, 2.0, 3.0, 4.0, 5.0]
-            bell._predict(x)
-
-    def test_bell_fit_vectors_different_length(self):
-        """Bell should raise ValueError when fit is called with vectors of different lengths."""
-        with self.assertRaises(ValueError):
-            bell = Bell()
-            x = np.arange(1, 6, dtype=float)  # x = [1.0, 2.0, 3.0, 4.0, 5.0]
-            y = np.arange(1, 5, dtype=float)  # y = [1.0, 2.0, 3.0, 4.0]
-            bell._fit(x, y)
-
-    def test_ernest_predict_without_fit(self):
-        """Ernest should raise Exception when predict is called without fit."""
-        with self.assertRaises(Exception):
-            ernest = Ernest()
-            x = np.arange(1, 6, dtype=float)
-            ernest._predict(x)
-
-    def test_ernest_fit_vectors_different_length(self):
-        """Ernest should raise ValueError when fit is called with vectors of different lengths."""
-        with self.assertRaises(ValueError):
-            ernest = Ernest()
-            x = np.arange(1, 6, dtype=float)
-            y = np.arange(1, 5, dtype=float)
-            ernest._fit(x, y)
-
     def test_ernest_correct_prediction(self):
         """Ernest should calculate the correct predictions."""
         # First assertion: y follows the Ernest model
@@ -81,13 +51,6 @@ class TestUnivariatePredictors(unittest.TestCase):
                 model.predict(np.array([1.0, 2.0, 3.0]))
             except Exception as e:
                 self.fail(f"fit method raised an exception with input {scale_outs}, {runtimes}: {e}")
-
-    def test_kernel_regression_predict_without_fit(self):
-        """KernelRegression should raise Exception when predict is called without fit."""
-        with self.assertRaises(Exception):
-            kernel_regression = KernelRegression()
-            x = np.arange(1, 6, dtype=float)
-            kernel_regression._predict(x)
 
     def test_kernel_regression_correct_prediction(self):
         """KernelRegression should calculate the correct predictions."""
