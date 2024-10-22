@@ -5,6 +5,7 @@ from .schemes import *
 from services.enel_service.common.apis.fs_api import FsApi
 from services.enel_service.common.apis.mongo_api import MongoApi
 from services.enel_service.common.apis.kubernetes_api import KubernetesApi
+from services.enel_service.common.db_schemes import ApplicationSubmissionModel as ApplicationSubmissionRequest
 
 router = APIRouter(
     prefix="/submission",

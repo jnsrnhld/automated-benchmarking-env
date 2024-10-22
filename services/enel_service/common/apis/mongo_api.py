@@ -42,7 +42,7 @@ class MongoApi(DatabaseApi):
         self.connection_string: str = ("mongodb://"
                                        f"{self.settings.mongodb_username}:{self.settings.mongodb_password}@"
                                        f"{self.settings.mongodb_endpoint}:{self.settings.mongodb_port}"
-                                       f"/{self.settings.mongodb_database}?authSource=admin")
+                                       f"/{self.settings.mongodb_database}?{self.settings.mongodb_connection_params}")
 
         self.client: Optional[AsyncIOMotorClient] = None
         self.database: Optional[Any] = None

@@ -6,36 +6,40 @@ scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
 # Which workloads do you want to run?
 workloads:
 #  # MICRO
-  - { name: "repartition", enabled: true, category: "micro" }
-  - { name: "sleep", enabled: true, category: "micro" }
-  - { name: "sort", enabled: true, category: "micro" }
-  - { name: "terasort", enabled: true, category: "micro" }
-  - { name: "wordcount", enabled: true, category: "micro" }
+  - { name: "repartition", enabled: false, category: "micro" }
+  - { name: "sleep", enabled: false, category: "micro" }
+  - { name: "sort", enabled: false, category: "micro" }
+  - { name: "terasort", enabled: false, category: "micro" }
+  - { name: "wordcount", enabled: false, category: "micro" }
 #  # MACHINE LEARNING
   - { name: "als", enabled: true, category: "ml" }
-  - { name: "bayes", enabled: true, category: "ml" }
-  - { name: "gbt", enabled: true, category: "ml" }
-  - { name: "gmm", enabled: true, category: "ml" }
-  - { name: "kmeans", enabled: true, category: "ml" }
-  - { name: "lda", enabled: true, category: "ml" }
+  - { name: "bayes", enabled: false, category: "ml" }
+  - { name: "gbt", enabled: false, category: "ml" }
+  - { name: "gmm", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: false, category: "ml" }
+  - { name: "lda", enabled: false, category: "ml" }
   - { name: "linear", enabled: false, category: "ml" } # requires way more memory than other jobs!
-  - { name: "lr", enabled: true, category: "ml" }
-  - { name: "pca", enabled: true, category: "ml" }
-  - { name: "rf", enabled: true, category: "ml" }
-  - { name: "svd", enabled: true, category: "ml" }
-  - { name: "svm", enabled: true, category: "ml" }
+  - { name: "lr", enabled: false, category: "ml" }
+  - { name: "pca", enabled: false, category: "ml" }
+  - { name: "rf", enabled: false, category: "ml" }
+  - { name: "svd", enabled: false, category: "ml" }
+  - { name: "svm", enabled: false, category: "ml" }
 #  # WEBSEARCH
-  - { name: "pagerank", enabled: true, category: "websearch" }
+  - { name: "pagerank", enabled: false, category: "websearch" }
 #  # GRAPH
-  - { name: "nweight", enabled: true, category: "graph" }
-  - { name: "pagerank", enabled: true, category: "graph" }
+  - { name: "nweight", enabled: false, category: "graph" }
+  - { name: "pagerank", enabled: false, category: "graph" }
 
 # configuration
 is_adaptive: true
 skip_data_generation: true
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
+driver_cores: 1
+executor_cores: 1
 driver_memory: 8192m
+driver_memory_overhead: 820m
 executor_memory: 8192m
+executor_memory_overhead: 820m
 target_runtime: 50000
 initial_executors: 2
 min_executors: 1

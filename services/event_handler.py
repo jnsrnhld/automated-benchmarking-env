@@ -1,85 +1,60 @@
 import json
-from typing import List
-from dataclasses import dataclass, asdict
+from typing import Dict, Optional, List
 from enum import Enum
 from abc import ABC, abstractmethod
 
+from pydantic import BaseModel, Field
 
-class EventType(Enum):
+
+class EventType(str, Enum):
     JOB_START = "JOB_START"
     JOB_END = "JOB_END"
     APPLICATION_START = "APPLICATION_START"
     APPLICATION_END = "APPLICATION_END"
 
 
-@dataclass
-class MessageEnvelope:
+class MessageEnvelope(BaseModel):
     event_type: EventType
     payload: dict
 
     @staticmethod
-    def from_json(json_str):
+    def from_json(json_str: str) -> "MessageEnvelope":
         data = json.loads(json_str)
         data['event_type'] = EventType(data['event_type'])
         return MessageEnvelope(**data)
 
-    def to_json(self):
-        data = asdict(self)
-        data['event_type'] = self.event_type.value
-        return json.dumps(data)
+
+class EnvironmentSpecs(BaseModel):
+    machine_type: str
+    hadoop_version: str
+    spark_version: str
+    scala_version: str
+    java_version: str
 
 
-@dataclass
-class AppStartMessage:
-    app_name: str
-    app_time: int
+class DriverSpecs(BaseModel):
+    cores: int
+    memory: str
+    memory_overhead: Optional[str] = None
+
+
+class ExecutorSpecs(BaseModel):
+    cores: int
+    memory: str
+    memory_overhead: Optional[str] = None
+
+
+class AppSpecs(BaseModel):
+    algorithm_name: str
+    algorithm_args: List[str]
+    datasize_mb: int
     target_runtime: int
     initial_executors: int
     min_executors: int
     max_executors: int
-    attempt_id: str
-
-    @staticmethod
-    def create(data: dict):
-        return AppStartMessage(**data)
-
-    def to_json(self):
-        return json.dumps(asdict(self))
 
 
-@dataclass
-class AppEndMessage:
-    app_event_id: str
-    app_name: str
-    app_time: int
-    num_executors: int
-
-    @staticmethod
-    def create(data: dict):
-        return AppEndMessage(**data)
-
-    def to_json(self):
-        return json.dumps(asdict(self))
-
-
-@dataclass
-class JobStartMessage:
-    app_event_id: str
-    app_name: str
-    app_time: int
-    job_id: int
-    num_executors: int
-
-    @staticmethod
-    def create(data: dict):
-        return JobStartMessage(**data)
-
-    def to_json(self):
-        return json.dumps(asdict(self))
-
-
-@dataclass
-class StageMetrics:
+class StageMetrics(BaseModel):
     cpu_utilization: float
     gc_time_ratio: float
     shuffle_read_write_ratio: float
@@ -87,12 +62,11 @@ class StageMetrics:
     memory_spill_ratio: float
 
 
-@dataclass
-class Stage:
+class Stage(BaseModel):
     stage_id: str
     stage_name: str
     num_tasks: int
-    parent_stage_ids: str
+    parent_stage_ids: list[int]
     attempt_id: int
     failure_reason: str
     start_time: int
@@ -107,43 +81,74 @@ class Stage:
     metrics: StageMetrics
 
 
-@dataclass
-class JobEndMessage:
+class AppStartMessage(BaseModel):
+    application_id: str  # spark app id
+    app_name: str  # spark app signature
+    app_time: int
+    attempt_id: Optional[str]
+    app_specs: AppSpecs
+    driver_specs: DriverSpecs
+    executor_specs: ExecutorSpecs
+    environment_specs: EnvironmentSpecs
+
+    @staticmethod
+    def create(data: dict) -> "AppStartMessage":
+        data['app_specs'] = AppSpecs(**data.get('app_specs', {}))
+        data['driver_specs'] = DriverSpecs(**data.get('driver_specs', {}))
+        data['executor_specs'] = ExecutorSpecs(**data.get('executor_specs', {}))
+        data['environment_specs'] = EnvironmentSpecs(**data.get('environment_specs', {}))
+        return AppStartMessage(**data)
+
+
+class AppEndMessage(BaseModel):
     app_event_id: str
-    app_name: str
+    app_time: int
+    num_executors: int
+
+    @staticmethod
+    def create(data: dict) -> "AppEndMessage":
+        return AppEndMessage(**data)
+
+
+class JobStartMessage(BaseModel):
+    app_event_id: str
+    app_time: int
+    job_id: int
+    num_executors: int
+
+    @staticmethod
+    def create(data: dict) -> "JobStartMessage":
+        return JobStartMessage(**data)
+
+
+class JobEndMessage(BaseModel):
+    app_event_id: str
     app_time: int
     job_id: int
     num_executors: int
     rescaling_time_ratio: float
-    stages: List[Stage]
+    stages: Dict[str, Stage]
 
     @staticmethod
-    def create(data: dict):
-        stages_data = data.pop("stages", [])
-        stages = [Stage(**stage_data) for stage_data in stages_data]
+    def create(data: dict) -> "JobEndMessage":
+        stages_data = data.pop("stages", {})
+        stages = {key: Stage(**value) for key, value in stages_data.items()}
         return JobEndMessage(stages=stages, **data)
 
-    def to_json(self):
-        return json.dumps(asdict(self), indent=4)
 
-
-@dataclass
-class ResponseMessage:
+class ResponseMessage(BaseModel):
     app_event_id: str
     recommended_scale_out: int
 
     @staticmethod
-    def create(json_str):
+    def create(json_str: str) -> "ResponseMessage":
         data = json.loads(json_str)
         return ResponseMessage(**data)
-
-    def to_json(self):
-        return json.dumps(asdict(self))
 
 
 class EventHandler(ABC):
     """
-    Interface for handling different event types.
+    Interface for handling different Spark event types.
     """
 
     @abstractmethod

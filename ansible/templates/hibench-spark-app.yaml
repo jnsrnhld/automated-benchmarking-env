@@ -20,7 +20,9 @@ spec:
     exposeDriverMetrics: true
     exposeExecutorMetrics: true
   driver:
+    cores: {{ driver_cores }}
     memory: "{{ driver_memory }}"
+    memoryOverhead: "{{ driver_memory_overhead }}"
     labels:
       version: "{{ spark_version }}"
     serviceAccount: spark-operator-spark
@@ -31,7 +33,9 @@ spec:
       - name: SPARKBENCH_PROPERTIES_FILES
         value: /mnt/config-maps/hibench.conf
   executor:
+    cores: {{ executor_cores }}
     memory: "{{ executor_memory }}"
+    memoryOverhead: "{{ executor_memory_overhead }}"
     labels:
       version: "{{ spark_version }}"
     configMaps:
@@ -53,10 +57,14 @@ spec:
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
     "spark.customExtraListener.isAdaptive": "{{ is_adaptive }}"
     "spark.customExtraListener.bridgeServiceAddress": "{{ bridge_service_address }}"
+    # listener app spec
+    "spark.customExtraListener.datasizeMb": "{{ datasize_mb }}"
     "spark.customExtraListener.targetRuntime": "{{ target_runtime }}"
-    "spark.customExtraListener.initialExecutors": "{{ initial_executors }}"
-    "spark.customExtraListener.minExecutors": "{{ min_executors }}"
-    "spark.customExtraListener.maxExecutors": "{{ max_executors }}"
+    # listener environment spec
+    "spark.customExtraListener.env.hadoopVersion": "{{ hadoop_version }}"
+    "spark.customExtraListener.env.sparkVersion": "{{ spark_version }}"
+    "spark.customExtraListener.env.scalaVersion": "{{ scala_version }}"
+    "spark.customExtraListener.env.javaVersion": "{{ java_version }}"
     # settings that allow for failure injection
     "spark.network.timeout": "20s"
     "spark.network.timeoutInterval": "20s"

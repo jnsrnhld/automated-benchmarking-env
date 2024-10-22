@@ -21,5 +21,11 @@ python3 -m services.bridge_service --handler YourEventHandler --port 1234
 # use Ellis handler
 python3 -m services.bridge_service --handler EllisEventHandler 
 # use ENEL handler
+MONGODB_ENDPOINT="mongodb-0.mongodb-headless.default.svc.cluster.local" \
+MONGODB_CONNECTION_PARAMS="replicaSet=rs0&authSource=test" \
+MONGODB_DATABASE="test" \
+MONGODB_USERNAME="test" \
+MONGODB_PASSWORD="Password1!" \
+HDFS_ENDPOINT="hdfs://localhost:9000" \
 python3 -m services.bridge_service --handler EnelEventHandler 
 ```

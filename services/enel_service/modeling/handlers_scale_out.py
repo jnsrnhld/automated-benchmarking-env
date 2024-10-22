@@ -1,4 +1,6 @@
+import asyncio
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 from typing import Union, List, Optional, Dict, Tuple
 from fastapi import BackgroundTasks
 import logging
@@ -17,7 +19,7 @@ mongo_settings: MongoSettings = MongoSettings.get_instance()
 
 
 async def handle_online_scale_out_prediction(request: OnlineScaleOutPredictionRequest,
-                                             background_tasks: BackgroundTasks,
+                                             background_tasks: BackgroundTasks | ThreadPoolExecutor,
                                              hdfs_api: HdfsApi,
                                              mongo_api: MongoApi):
     logging_prefix: str = f"[Application-Execution-Id: {request.application_execution_id},  " \
@@ -30,8 +32,14 @@ async def handle_online_scale_out_prediction(request: OnlineScaleOutPredictionRe
 
     # if request was only to report new data and no prediction needed, we simply return
     if not request.predict:
-        background_tasks.add_task(handle_update_information, update_information_request, mongo_api)
-        return OnlineScaleOutPredictionResponse()
+        if isinstance(background_tasks, BackgroundTasks):
+            background_tasks.add_task(handle_update_information, update_information_request, mongo_api)
+            return OnlineScaleOutPredictionResponse()
+        elif isinstance(background_tasks, ThreadPoolExecutor):
+            background_tasks.submit(asyncio.run, handle_update_information(update_information_request, mongo_api))
+            return OnlineScaleOutPredictionResponse()
+        else:
+            raise ValueError("background_tasks must be either BackgroundTasks or ThreadPoolExecutor")
     else:
         job_db_element: Optional[JobExecutionModel] = await handle_update_information(update_information_request,
                                                                                       mongo_api)

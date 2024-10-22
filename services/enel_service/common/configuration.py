@@ -65,6 +65,7 @@ class KubernetesSettings(BaseSettings):
 
 class MongoSettings(BaseSettings):
     mongodb_endpoint: Optional[str] = ""
+    mongodb_connection_params: Optional[str] = "authSource=admin"
     mongodb_port: Optional[int] = 27017
     mongodb_database: Optional[str] = "enel_service"
     mongodb_username: Optional[str] = "root"

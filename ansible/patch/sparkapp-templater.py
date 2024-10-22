@@ -47,25 +47,35 @@ def render_template(template_path: str, context: dict, output_path: str) -> None
         output_file.write(output)
 
 
-def main(input_string: str, config_path: str, template_path: str, output_path: str) -> None:
+def main(input_string: str, du_string: str, config_path: str, template_path: str, output_path: str) -> None:
     """
     Main function to generate the templated YAML file.
 
     Args:
         input_string (str): The input string with the Java class and arguments.
+        du_string (str): Output of the dir_size hibench function. Example: 9795\n29385.
         config_path (str): Path to the YAML file containing additional template values.
         template_path (str): Path to the Jinja2 template file.
         output_path (str): Path where the rendered file will be saved.
     """
     # Parse the input string to extract the main class and arguments
-    parsed_data = parse_input_string(input_string)
+    hibench_app_specs = parse_input_string(input_string)
+
+    # Add datasize
+    if len(du_string) == 0:
+        # prepare jobs have no datasize
+        megabytes=0
+    else:
+        datasize_bytes = du_string.strip().split()[0]
+        megabytes=int(datasize_bytes) / (1024 * 1024)
+    hibench_app_specs.update({"datasize_mb": megabytes})
 
     # Load the config file containing the additional template values
     with open(config_path, 'r') as config_file:
         config_data = yaml.safe_load(config_file)
 
     # Merge the parsed data with the config data
-    context = {**config_data, **parsed_data}
+    context = {**config_data, **hibench_app_specs}
 
     # Render the template and save the output
     render_template(template_path, context, output_path)
@@ -77,6 +87,7 @@ if __name__ == "__main__":
     # Setup command line arguments
     parser = argparse.ArgumentParser(description="Generate templated YAML using Jinja2.")
     parser.add_argument("input_string", type=str, help="The input string containing the Java class and arguments.")
+    parser.add_argument("du_string", type=str, help="Output of the dir_size hibench function. Example: 9795\n29385")
     parser.add_argument("config_path", type=str, help="Path to the YAML file containing additional template values.")
     parser.add_argument("template_path", type=str, help="Path to the Jinja2 template file.")
     parser.add_argument("output_path", type=str, help="Path where the rendered file will be saved.")
@@ -84,4 +95,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Call the main function with the provided arguments
-    main(args.input_string, args.config_path, args.template_path, args.output_path)
+    main(args.input_string, args.du_string, args.config_path, args.template_path, args.output_path)

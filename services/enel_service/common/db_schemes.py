@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List, Dict, Union, Optional
+from wsgiref.validate import validator
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validate_model
 
 
 class GlobalSpecsModel(BaseModel):
@@ -18,7 +19,7 @@ class GlobalSpecsModel(BaseModel):
     data_characteristics: str = Field(default="")
 
     machine_name: str = Field(...)
-    environment_name: str = Field(...)
+    environment_name: str = Field(default="")
 
     min_scale_out: int = Field(..., gt=0)
     max_scale_out: int = Field(..., gt=0)
@@ -33,14 +34,14 @@ class OptionalSpecsModel(BaseModel):
 
 
 class MasterSpecsModel(BaseModel):
-    scale_out: int = Field(..., gt=0)
+    scale_out: int = Field(gt=0, default=None)
     cores: int = Field(..., gt=0)
     memory: str = Field(...)
     memory_overhead: str = Field(...)
 
 
 class WorkerSpecsModel(BaseModel):
-    scale_out: int = Field(..., gt=0)
+    scale_out: int = Field(gt=0, default=None)
     cores: int = Field(..., gt=0)
     memory: str = Field(...)
     memory_overhead: str = Field(...)
@@ -49,9 +50,12 @@ class WorkerSpecsModel(BaseModel):
 class MetricsModel(BaseModel):
     cpu_utilization: float = Field(...)
     gc_time_ratio: float = Field(...)
-    shuffle_rw_ratio: float = Field(...)
-    data_io_ratio: float = Field(...)
+    shuffle_rw_ratio: float = Field(..., alias="shuffle_read_write_ratio")
+    data_io_ratio: float = Field(..., alias="input_output_ratio")
     memory_spill_ratio: float = Field(...)
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ApplicationSubmissionModel(BaseModel):

@@ -24,7 +24,7 @@ class ZeroMQServer:
                 envelope = MessageEnvelope.from_json(message)
 
                 response_message = self.process_message(envelope)
-                response_json = response_message.to_json()
+                response_json = response_message.json()
                 self.socket.send_string(response_json)
 
         except KeyboardInterrupt:

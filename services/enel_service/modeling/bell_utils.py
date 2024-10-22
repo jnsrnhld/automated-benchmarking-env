@@ -72,7 +72,7 @@ class Ernest(object):
 
 
 class KernelReg(object):
-    def __init__(self, bw=None, degree=1, tol=np.finfo(np.float).eps):
+    def __init__(self, bw=None, degree=1, tol=np.finfo(float).eps):
         self.bw = bw
         self.degree = degree
         self.tol = tol

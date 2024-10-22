@@ -3,6 +3,7 @@ from typing import Tuple
 from collections import defaultdict
 from bson.objectid import ObjectId
 
+from .config import Config
 from .ernest import Ernest
 from .bell import Bell
 
@@ -132,7 +133,7 @@ class EllisUtils:
         Returns:
             Tuple[np.ndarray, np.ndarray]: Arrays of scale-outs and runtimes.
         """
-        app_event_collection = self.db['app_event']
+        app_event_collection = self.db[Config.ELLIS_APP_EVENT_COLLECTION]
 
         pipeline = [
             {
@@ -143,7 +144,7 @@ class EllisUtils:
             },
             {
                 '$lookup': {
-                    'from': 'job_event',
+                    'from': Config.ELLIS_JOB_EVENT_COLLECTION,
                     'let': {'appId': '$_id'},
                     'pipeline': [
                         {
@@ -230,7 +231,7 @@ class EllisUtils:
 
     def update_scaleout(self, app_event_id: str, job_id: int, job_end_time: int, current_scale_out: int) -> int:
 
-        app_event = self.db['app_event'].find_one({'_id': ObjectId(app_event_id)})
+        app_event = self.db[Config.ELLIS_APP_EVENT_COLLECTION].find_one({'_id': ObjectId(app_event_id)})
         app_signature = app_event['app_id']
         app_start_time = app_event['started_at']
         target_runtime = app_event['target_runtime']
@@ -287,7 +288,7 @@ class EllisUtils:
         return current_scale_out
 
     def gather_job_runtime_data(self, app_event_id, app_signature):
-        app_event_collection = self.db['app_event']
+        app_event_collection = self.db[Config.ELLIS_APP_EVENT_COLLECTION]
         pipeline = [
             {
                 '$match': {
@@ -297,7 +298,7 @@ class EllisUtils:
             },
             {
                 '$lookup': {
-                    'from': 'job_event',
+                    'from': Config.ELLIS_JOB_EVENT_COLLECTION,
                     'let': {'appId': '$_id'},
                     'pipeline': [
                         {

@@ -8,6 +8,7 @@ from services.enel_service.common.apis.fs_api import FsApi
 from services.enel_service.common.apis.hdfs_api import HdfsApi
 from services.enel_service.common.apis.kubernetes_api import KubernetesApi, generate_template_code, update_dict_func
 from services.enel_service.common.apis.mongo_api import MongoApi
+from services.enel_service.common.db_schemes import ApplicationSubmissionModel as ApplicationSubmissionRequest
 from services.enel_service.common.configuration import GeneralSettings, HdfsSettings, MongoSettings, ListenerSettings
 from services.enel_service.modeling.schemes import OfflineScaleOutPredictionResponse
 from services.enel_service.modeling.transforms import DictCamelCaser

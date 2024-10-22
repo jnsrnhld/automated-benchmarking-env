@@ -207,7 +207,8 @@ function run_spark_job() {
     output_path="$(dirname "$(realpath "$0")")/spark-app.yaml"
     values_path="${HIBENCH_HOME}/values.yaml"
     main_class_with_arguments="$CLS $*"
-    python3 "${HIBENCH_HOME}/sparkapp-templater.py" "$main_class_with_arguments" "$values_path" "${HIBENCH_HOME}/hibench-spark-app.yaml" "$output_path"
+    size=`dir_size $INPUT_HDFS`
+    python3 "${HIBENCH_HOME}/sparkapp-templater.py" "$main_class_with_arguments" "$size" "$values_path" "${HIBENCH_HOME}/hibench-spark-app.yaml" "$output_path"
 
     # submit the job to k8s
     echo -e "${BGreen}Submit Spark job $CLS with args $*"

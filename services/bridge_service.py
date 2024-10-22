@@ -1,25 +1,12 @@
 import argparse
-import pymongo
 
-from pymongo.database import Database
-from .config import Config
+from .enel_service.enel_event_handler import EnelEventHandler
 from .server import ZeroMQServer
 from .event_handler import EventHandler, NoOpEventHandler
 from .ellis_port.ellis_event_handler import EllisEventHandler
 
 
-def connect_to_mongodb():
-    try:
-        client = pymongo.MongoClient(Config.MONGODB_CONNECTION_STRING, tz_aware=True)
-        db = client[Config.MONGODB_DATABASE]
-        print(f"Connected to MongoDB database: {Config.MONGODB_DATABASE}")
-        return db
-    except Exception as e:
-        print(f"Failed to connect to MongoDB: {e}")
-        raise
-
-
-def get_event_handler(handler_name: str, db: Database) -> EventHandler:
+def get_event_handler(handler_name: str) -> EventHandler:
     """
     Returns an instance of the event handler based on the handler name.
 
@@ -30,12 +17,13 @@ def get_event_handler(handler_name: str, db: Database) -> EventHandler:
     handler_classes = {
         'NoOpEventHandler': NoOpEventHandler,
         'EllisEventHandler': EllisEventHandler,
+        'EnelEventHandler': EnelEventHandler,
         # 'OtherEventHandler': OtherEventHandler,
     }
 
     try:
         handler_class = handler_classes[handler_name]
-        return handler_class(db)
+        return handler_class()
     except KeyError:
         raise ValueError(f"Unknown event handler: {handler_name}")
 
@@ -56,7 +44,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    mongodb = connect_to_mongodb()
-    event_handler = get_event_handler(args.handler, mongodb)
+    event_handler = get_event_handler(args.handler)
     server = ZeroMQServer(event_handler, args.port)
     server.start()
