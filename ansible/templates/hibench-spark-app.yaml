@@ -22,7 +22,6 @@ spec:
   driver:
     cores: {{ driver_cores }}
     memory: "{{ driver_memory }}"
-    memoryOverhead: "{{ driver_memory_overhead }}"
     labels:
       version: "{{ spark_version }}"
     serviceAccount: spark-operator-spark
@@ -35,7 +34,6 @@ spec:
   executor:
     cores: {{ executor_cores }}
     memory: "{{ executor_memory }}"
-    memoryOverhead: "{{ executor_memory_overhead }}"
     labels:
       version: "{{ spark_version }}"
     configMaps:

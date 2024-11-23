@@ -26,6 +26,6 @@ MONGODB_CONNECTION_PARAMS="replicaSet=rs0&authSource=test" \
 MONGODB_DATABASE="test" \
 MONGODB_USERNAME="test" \
 MONGODB_PASSWORD="Password1!" \
-HDFS_ENDPOINT="hdfs://localhost:9000" \
+HDFS_ENDPOINT="http://localhost:9870" \
 python3 -m services.bridge_service --handler EnelEventHandler 
 ```

@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 
 from bson import ObjectId
 from fastapi import HTTPException, status
@@ -36,15 +37,21 @@ def extend_spark_config(document: ApplicationExecutionModel):
 
 
 async def alter_submission_model(document: ApplicationExecutionModel, hdfs_api: HdfsApi, mongo_api: MongoApi):
-    if document.global_specs.solution_name == "enel" and \
-            document.spark_template_values.get("scale_out_tuner", {}).get("config", {}).get("is_adaptive", False):
+    if document.global_specs.solution_name == "enel" and document.global_specs.is_adaptive:
         logging.info("Get initial scale-out from Enel (with help of Bell)...")
         response: OfflineScaleOutPredictionResponse = await handle_initial_scale_out_prediction(document,
                                                                                                 hdfs_api, mongo_api)
         document = response.prepared_db_entry
     else:
-        logging.info("Get initial scale-out from Ellis...")
-        document, _ = await handle_ellis_initial_scale_out_prediction(document)
+        min_scale_out = document.global_specs.min_scale_out
+        max_scale_out = document.global_specs.max_scale_out
+
+        logging.info("Training run: selecting a random scale-out between {} and {}", min_scale_out, max_scale_out)
+
+        selected_scale_out = random.randint(min_scale_out, max_scale_out)
+        document.start_scale_out = selected_scale_out
+        document.end_scale_out = selected_scale_out
+
     # set scale out for worker property
     document.worker_specs.scale_out = document.start_scale_out
     # remember scale-out prediction

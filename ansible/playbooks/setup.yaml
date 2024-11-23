@@ -487,6 +487,7 @@
   become_user: "{{ linux_username }}"
   tasks:
     - name: Create directory for HiBench
+      become_user: root
       file:
         path: "{{ hibench_dir }}"
         state: directory
@@ -559,6 +560,10 @@
         - { src: "sparkbench.pom.xml", target: "sparkbench/pom.xml" }
         - { src: "sparkbench.ml.pom.xml", target: "sparkbench/ml/pom.xml" }
         - { src: "NWeightDataGenerator.scala", target: "sparkbench/graph/src/main/scala/com/intel/hibench/sparkbench/graph/nweight/NWeightDataGenerator.scala" }
+        - { src: "ScalaSparkSQLBench.scala", target: "sparkbench/sql/src/main/scala/com/intel/hibench/sparkbench/sql/ScalaSparkSQLBench.scala" }
+        - { src: "sql.aggregation.run.sh", target: "bin/workloads/sql/aggregation/spark/run.sh" }
+        - { src: "sql.join.run.sh", target: "bin/workloads/sql/join/spark/run.sh" }
+        - { src: "sql.scan.run.sh", target: "bin/workloads/sql/scan/spark/run.sh" }
         - { src: "workload_functions.sh", target: "bin/functions" }
         - { src: "sparkapp-templater.py", target: "" }
 

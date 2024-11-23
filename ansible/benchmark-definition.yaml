@@ -12,7 +12,7 @@ workloads:
   - { name: "terasort", enabled: false, category: "micro" }
   - { name: "wordcount", enabled: false, category: "micro" }
 #  # MACHINE LEARNING
-  - { name: "als", enabled: true, category: "ml" }
+  - { name: "als", enabled: false, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
   - { name: "gbt", enabled: false, category: "ml" }
   - { name: "gmm", enabled: false, category: "ml" }
@@ -24,6 +24,10 @@ workloads:
   - { name: "rf", enabled: false, category: "ml" }
   - { name: "svd", enabled: false, category: "ml" }
   - { name: "svm", enabled: false, category: "ml" }
+#  # SQL
+  - { name: "scan", enabled: true, category: "sql" }
+  - { name: "join", enabled: true, category: "sql" }
+  - { name: "aggregation", enabled: false, category: "sql" }
 #  # WEBSEARCH
   - { name: "pagerank", enabled: false, category: "websearch" }
 #  # GRAPH
@@ -31,15 +35,13 @@ workloads:
   - { name: "pagerank", enabled: false, category: "graph" }
 
 # configuration
-is_adaptive: true
-skip_data_generation: true
+is_adaptive: false
+skip_data_generation: false # data generation can be skipped if you run the benchmark multiple times
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_cores: 1
 executor_cores: 1
 driver_memory: 8192m
-driver_memory_overhead: 820m
 executor_memory: 8192m
-executor_memory_overhead: 820m
 target_runtime: 50000
 initial_executors: 2
 min_executors: 1

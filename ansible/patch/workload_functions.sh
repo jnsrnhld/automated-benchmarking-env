@@ -389,13 +389,16 @@ function ensure_nutchindexing_release () {
     echo $NUTCH_HOME_WORKLOAD
 }
 
+### PATCH START ###
 function prepare_sql_aggregation () {
-    assert $1 "SQL file path not exist"
-    HIVEBENCH_SQL_FILE=$1
+    assert $1 "SQL local file path not exist"
+    assert $2 "SQL remote file path not exist"
+    HIVEBENCH_LOCAL_SQL_FILE=$1
+    HIVEBENCH_REMOTE_SQL_FILE=$2
 
     find . -name "metastore_db" -exec rm -rf "{}" \; 2>/dev/null
 
-    cat <<EOF > ${HIVEBENCH_SQL_FILE}
+    cat <<EOF > "${HIVEBENCH_LOCAL_SQL_FILE}"
 USE DEFAULT;
 set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 set ${MAP_CONFIG_NAME}=$NUM_MAPS;
@@ -408,15 +411,19 @@ DROP TABLE IF EXISTS uservisits_aggre;
 CREATE EXTERNAL TABLE uservisits_aggre ( sourceIP STRING, sumAdRevenue DOUBLE) STORED AS  SEQUENCEFILE LOCATION '$OUTPUT_HDFS/uservisits_aggre';
 INSERT OVERWRITE TABLE uservisits_aggre SELECT sourceIP, SUM(adRevenue) FROM uservisits GROUP BY sourceIP;
 EOF
+
+    upload_to_hdfs "${HIVEBENCH_LOCAL_SQL_FILE}" "${HIVEBENCH_REMOTE_SQL_FILE}"
 }
 
 function prepare_sql_join () {
-    assert $1 "SQL file path not exist"
-    HIVEBENCH_SQL_FILE=$1
+    assert $1 "SQL local file path not exist"
+    assert $2 "SQL remote file path not exist"
+    HIVEBENCH_LOCAL_SQL_FILE=$1
+    HIVEBENCH_REMOTE_SQL_FILE=$2
 
     find . -name "metastore_db" -exec rm -rf "{}" \; 2>/dev/null
 
-    cat <<EOF > ${HIVEBENCH_SQL_FILE}
+    cat <<EOF > ${HIVEBENCH_LOCAL_SQL_FILE}
 USE DEFAULT;
 set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 set ${MAP_CONFIG_NAME}=$NUM_MAPS;
@@ -432,15 +439,19 @@ DROP TABLE IF EXISTS rankings_uservisits_join;
 CREATE EXTERNAL TABLE rankings_uservisits_join ( sourceIP STRING, avgPageRank DOUBLE, totalRevenue DOUBLE) STORED AS  SEQUENCEFILE LOCATION '$OUTPUT_HDFS/rankings_uservisits_join';
 INSERT OVERWRITE TABLE rankings_uservisits_join SELECT sourceIP, avg(pageRank), sum(adRevenue) as totalRevenue FROM rankings R JOIN (SELECT sourceIP, destURL, adRevenue FROM uservisits_copy UV WHERE (datediff(UV.visitDate, '1999-01-01')>=0 AND datediff(UV.visitDate, '2000-01-01')<=0)) NUV ON (R.pageURL = NUV.destURL) group by sourceIP order by totalRevenue DESC;
 EOF
+
+  upload_to_hdfs "${HIVEBENCH_LOCAL_SQL_FILE}" "${HIVEBENCH_REMOTE_SQL_FILE}"
 }
 
 function prepare_sql_scan () {
-    assert $1 "SQL file path not exist"
-    HIVEBENCH_SQL_FILE=$1
+    assert $1 "SQL local file path not exist"
+    assert $2 "SQL remote file path not exist"
+    HIVEBENCH_LOCAL_SQL_FILE=$1
+    HIVEBENCH_REMOTE_SQL_FILE=$2
 
     find . -name "metastore_db" -exec rm -rf "{}" \; 2>/dev/null
 
-    cat <<EOF > ${HIVEBENCH_SQL_FILE}
+    cat <<EOF > ${HIVEBENCH_LOCAL_SQL_FILE}
 USE DEFAULT;
 set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 set ${MAP_CONFIG_NAME}=$NUM_MAPS;
@@ -455,4 +466,6 @@ CREATE EXTERNAL TABLE uservisits_copy (sourceIP STRING,destURL STRING,visitDate 
 INSERT OVERWRITE TABLE uservisits_copy SELECT * FROM uservisits;
 EOF
 
+  upload_to_hdfs "${HIVEBENCH_LOCAL_SQL_FILE}" "${HIVEBENCH_REMOTE_SQL_FILE}"
 }
+### PATCH END ###

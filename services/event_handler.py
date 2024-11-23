@@ -86,6 +86,7 @@ class AppStartMessage(BaseModel):
     app_name: str  # spark app signature
     app_time: int
     attempt_id: Optional[str]
+    is_adaptive: bool
     app_specs: AppSpecs
     driver_specs: DriverSpecs
     executor_specs: ExecutorSpecs

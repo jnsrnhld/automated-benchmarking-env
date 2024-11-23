@@ -73,11 +73,9 @@
           # driver spec
           driver_cores: {{ driver_cores }}
           driver_memory: {{ driver_memory }}
-          driver_memory_overhead: {{ driver_memory_overhead }}
           # executor spec
           executor_cores: {{ executor_cores }}
           executor_memory: {{ executor_memory }}
-          executor_memory_overhead: {{ executor_memory_overhead }}
           # environment spec
           hadoop_version: {{ hadoop_version }}
           spark_version: {{ spark_version }}

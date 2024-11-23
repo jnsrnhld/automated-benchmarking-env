@@ -3,7 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from bson.json_util import ObjectId
 from pydantic import BaseModel
+from hdfs import InsecureClient
 
+from .common.configuration import HdfsSettings
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model
@@ -30,10 +32,11 @@ class EnelEventHandler(EventHandler):
         application = RunningApplication(app_event_id, message.application_id, message.app_name)
         self.running_applications[app_event_id] = application
 
-        # add the application to database
+        # add the application
         application_execution_model = application.to_application_execution_model(message)
         asyncio.run(alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api))
 
+        # update it
         update_request = application.to_update_information_request(message)
         asyncio.run(handle_update_information(update_request, self.mongo_api))
 
@@ -190,6 +193,7 @@ class RunningApplication:
             global_specs=GlobalSpecsModel(
                 solution_name="enel",
                 system_name="spark",
+                is_adaptive=message.is_adaptive,
                 experiment_name=message.app_name,
                 algorithm_name=message.app_specs.algorithm_name,
                 algorithm_args=message.app_specs.algorithm_args,

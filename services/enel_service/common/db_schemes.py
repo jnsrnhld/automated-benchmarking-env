@@ -21,6 +21,7 @@ class GlobalSpecsModel(BaseModel):
     machine_name: str = Field(...)
     environment_name: str = Field(default="")
 
+    is_adaptive: bool = Field(...)
     min_scale_out: int = Field(..., gt=0)
     max_scale_out: int = Field(..., gt=0)
     max_runtime: int = Field(..., gt=0)
