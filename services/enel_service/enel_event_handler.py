@@ -3,15 +3,14 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from bson.json_util import ObjectId
 from pydantic import BaseModel
-from hdfs import InsecureClient
 
-from .common.configuration import HdfsSettings
+from .modeling.handlers_training import handle_trigger_model_training
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model
 from .modeling.handlers_scale_out import handle_online_scale_out_prediction
 from .modeling.schemes import UpdateInformationRequest, RootDataUpdateModel, OnlineScaleOutPredictionRequest, \
-    OnlineScaleOutPredictionResponse
+    OnlineScaleOutPredictionResponse, TriggerModelTrainingRequest
 from .modeling.handlers_updating import handle_update_information
 from .common.apis.hdfs_api import HdfsApi
 from .common.apis.mongo_api import MongoApi
@@ -29,12 +28,17 @@ class EnelEventHandler(EventHandler):
     def handle_application_start(self, message: AppStartMessage) -> ResponseMessage:
 
         app_event_id = str(ObjectId())
-        application = RunningApplication(app_event_id, message.application_id, message.app_name)
+        application = RunningApplication(app_event_id, message)
         self.running_applications[app_event_id] = application
 
         # add the application
         application_execution_model = application.to_application_execution_model(message)
         asyncio.run(alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api))
+
+        # training run?
+        if not application.is_adaptive:
+            training_request = application.to_trigger_model_training_request(application_execution_model)
+            asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
 
         # update it
         update_request = application.to_update_information_request(message)
@@ -61,8 +65,9 @@ class EnelEventHandler(EventHandler):
         app_scale_out_map = application.scale_out_map
         app_scale_out_map[next_job_id] = app_scale_out_map.get(next_job_id, app_scale_out_map.get(job_id))
 
-        # trigger prediction request
-        application.try_handle_online_scale_out_request(message, self.hdfs_api, self.mongo_api)
+        # trigger prediction request if not a training run
+        if application.is_adaptive:
+            application.try_handle_online_scale_out_request(message, self.hdfs_api, self.mongo_api)
 
         if app_scale_out_map[next_job_id] != app_scale_out_map.get(job_id):
             return ResponseMessage(
@@ -105,10 +110,11 @@ class JobInfo(BaseModel):
     stages: dict[str, Stage] = {}
 
 class RunningApplication:
-    def __init__(self, app_event_id: str, application_id: str, app_signature: str):
+    def __init__(self, app_event_id: str, app_start_message: AppStartMessage):
+        self.is_adaptive = app_start_message.is_adaptive
         self.app_event_id = app_event_id
-        self.application_id = application_id
-        self.app_signature = app_signature
+        self.application_id = app_start_message.application_id
+        self.app_signature = app_start_message.app_name
         self.job_info_map: dict[str, JobInfo] = {}
         self.scale_out_map: dict[int, int] = {}
         self.lastPredictionLength = -1
@@ -166,6 +172,7 @@ class RunningApplication:
         return OnlineScaleOutPredictionRequest(
             application_execution_id=self.app_event_id,
             application_id=self.application_id,
+            job_id=job_id,
             update_event=EventType.JOB_END,
             updates=RootDataUpdateModel(**job_info.dict()),
             predict=request_prediction
@@ -219,4 +226,12 @@ class RunningApplication:
                 memory=message.executor_specs.memory,
                 memory_overhead=message.executor_specs.memory_overhead,
             ),
+        )
+
+    def to_trigger_model_training_request(self, app_model: ApplicationExecutionModel) -> TriggerModelTrainingRequest:
+        return TriggerModelTrainingRequest(
+            system_name=app_model.global_specs.system_name,
+            algorithm_name=app_model.global_specs.algorithm_name,
+            model_name="onlinepredictor",
+            experiment_name=app_model.global_specs.experiment_name,
         )

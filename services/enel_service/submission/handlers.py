@@ -15,7 +15,6 @@ from services.enel_service.modeling.schemes import OfflineScaleOutPredictionResp
 from services.enel_service.modeling.transforms import DictCamelCaser
 from services.enel_service.modeling.handlers_scale_out_initial import handle_initial_scale_out_prediction
 from .schemes import *
-from .ellis_utils import handle_ellis_initial_scale_out_prediction
 
 hdfs_settings: HdfsSettings = HdfsSettings.get_instance()
 general_settings: GeneralSettings = GeneralSettings.get_instance()

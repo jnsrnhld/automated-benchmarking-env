@@ -28,10 +28,14 @@ class EllisEventHandler(EventHandler):
 
         app_event_id = self.insert_app_event(message)
         app_specs = message.app_specs
+        self.running_applications[app_event_id] = RunningApplication(app_event_id, message)
+
+        if not message.is_adaptive:
+            return self.no_op_app_start_response(message)
+
         initial_scaleout = self.ellis_utils.compute_initial_scale_out(
             app_event_id, message.app_name, app_specs.min_executors, app_specs.max_executors, app_specs.target_runtime
         )
-        self.running_applications[app_event_id] = RunningApplication(message.application_id, app_event_id, message.app_name)
         print(f"Recommending initial scale out: {initial_scaleout}")
 
         return ResponseMessage(
@@ -44,11 +48,12 @@ class EllisEventHandler(EventHandler):
         return self.no_op_job_event_recommendation(message)
 
     def handle_job_end(self, message: JobEndMessage) -> ResponseMessage:
-        self.update_job_event(message)
 
         running_app = self.running_applications[message.app_event_id]
-        (scaleOuts, _) = self.ellis_utils.get_non_adaptive_runs(running_app.app_event_id, running_app.app_signature)
-        if scaleOuts.size > 3:
+        self.update_job_event(message)
+
+        (scale_outs, _) = self.ellis_utils.get_non_adaptive_runs(running_app.app_event_id, running_app.app_signature)
+        if (not running_app.is_adaptive) or scale_outs.size > 3:
             recommended_scale_out = self.ellis_utils.update_scaleout(
                 message.app_event_id,
                 message.job_id,
@@ -122,8 +127,9 @@ class EllisEventHandler(EventHandler):
             unique=True
         )
 
-class RunningApplication():
-    def __init__(self, application_id: str, app_event_id: str, app_signature: str):
-        self.application_id = application_id
+class RunningApplication:
+    def __init__(self, app_event_id: str, app_start_message: AppStartMessage):
+        self.application_id = app_start_message.application_id
         self.app_event_id = app_event_id
-        self.app_signature = app_signature
+        self.app_signature = app_start_message.app_name
+        self.is_adaptive = app_start_message.is_adaptive

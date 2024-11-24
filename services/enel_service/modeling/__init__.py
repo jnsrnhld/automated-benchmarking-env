@@ -16,6 +16,7 @@ application_database_obj = {
     "predict_time": 0.01,
     "preparation_time": 5.23,
     "global_specs": {
+        "is_adaptive": True,
         "solution_name": "enel",
         "system_name": "spark",
         "template_version": "v1",
@@ -65,6 +66,7 @@ job_database_obj = {
     "preparation_time": 5.23,
     "rescaling_time_ratio": 0.0,
     "global_specs": {
+        "is_adaptive": True,
         "solution_name": "enel",
         "system_name": "spark",
         "template_version": "v1",

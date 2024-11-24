@@ -24,6 +24,7 @@ enter_bench ScalaSparkJoin ${workload_config} ${current_dir}
 show_bannar start
 
 # prepare SQL
+### PATCH START ###
 SQL_FILE="rankings_uservisits_join.hive"
 HIVEBENCH_SQL_FILE="${WORKLOAD_RESULT_FOLDER}/${SQL_FILE}"
 HIVEBENCH_REMOTE_SQL_FILE="${INPUT_HDFS}/${SQL_FILE}";
@@ -33,6 +34,7 @@ START_TIME=`timestamp`
 SIZE=`dir_size $INPUT_HDFS`
 rmr_hdfs $OUTPUT_HDFS
 run_spark_job com.intel.hibench.sparkbench.sql.ScalaSparkSQLBench ScalaJoin ${HIVEBENCH_REMOTE_SQL_FILE}
+### PATCH END ###`
 
 sleep 5
 END_TIME=`timestamp`

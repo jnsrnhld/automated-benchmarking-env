@@ -24,6 +24,7 @@ enter_bench ScalaSparkAggregation ${workload_config} ${current_dir}
 show_bannar start
 
 # prepare SQL
+### PATCH START ###
 SQL_FILE="uservisits_aggre.hive"
 HIVEBENCH_SQL_FILE="${WORKLOAD_RESULT_FOLDER}/${SQL_FILE}"
 HIVEBENCH_REMOTE_SQL_FILE="${INPUT_HDFS}/${SQL_FILE}";
@@ -32,7 +33,8 @@ prepare_sql_aggregation ${HIVEBENCH_SQL_FILE} ${HIVEBENCH_REMOTE_SQL_FILE}
 START_TIME=`timestamp`
 rmr_hdfs $OUTPUT_HDFS
 run_spark_job com.intel.hibench.sparkbench.sql.ScalaSparkSQLBench ScalaAggregation ${HIVEBENCH_REMOTE_SQL_FILE}
-END_TIME=`timestamp`
+END_TIME=`timestamp
+### PATCH END ###`
 
 sleep 5
 SIZE=`dir_size $OUTPUT_HDFS`

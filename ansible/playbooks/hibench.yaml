@@ -90,6 +90,6 @@
 
     - name: Run benchmark
       become_user: "{{ linux_username }}"
-      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.category }}/{{ item.name }}/spark/run.sh"
-      loop: "{{ workloads }}"
-      when: item.enabled
+      command: bash "{{ hibench_dir }}/bin/workloads/{{ item.1.category }}/{{ item.1.name }}/spark/run.sh"
+      loop: "{{ range(0, runs) | product(workloads) | list }}"
+      when: item.1.enabled
