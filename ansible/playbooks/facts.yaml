@@ -74,7 +74,7 @@
     - name: Print infos
       debug:
         msg:
-          - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}"
+          - "KUBERNETES_ENDPOINT: {{ ansible_ssh_host }}:6443"
           - "KUBECONFIG: {{ lookup('env', 'PWD') }}/.kubeconfig"
           - "MONGODB_CONNECTION_STRING: {{ MONGODB_CONNECTION_STRING }}"
           - "HDFS_CONNECTION_STRING: {{ hdfs_address }}"

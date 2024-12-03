@@ -1,20 +1,17 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
+
 from bson.json_util import ObjectId
 from pydantic import BaseModel
 
-from .modeling.handlers_training import handle_trigger_model_training
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model
 from .modeling.handlers_scale_out import handle_online_scale_out_prediction
-from .modeling.schemes import UpdateInformationRequest, RootDataUpdateModel, OnlineScaleOutPredictionRequest, \
-    OnlineScaleOutPredictionResponse, TriggerModelTrainingRequest
+from .modeling.schemes import UpdateInformationRequest, RootDataUpdateModel, OnlineScaleOutPredictionRequest, TriggerModelTrainingRequest
 from .modeling.handlers_updating import handle_update_information
 from .common.apis.hdfs_api import HdfsApi
 from .common.apis.mongo_api import MongoApi
-from services.event_handler import EventHandler, AppEndMessage, ResponseMessage, JobEndMessage, JobStartMessage, \
+from ..event_handler import EventHandler, AppEndMessage, ResponseMessage, JobEndMessage, JobStartMessage, \
     AppStartMessage, EventType, Stage
 
 
@@ -35,10 +32,10 @@ class EnelEventHandler(EventHandler):
         application_execution_model = application.to_application_execution_model(message)
         asyncio.run(alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api))
 
-        # training run?
-        if not application.is_adaptive:
-            training_request = application.to_trigger_model_training_request(application_execution_model)
-            asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
+        # training run? TODO does not work
+        # if not application.is_adaptive:
+        #     training_request = application.to_trigger_model_training_request(application_execution_model)
+        #     asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
 
         # update it
         update_request = application.to_update_information_request(message)
@@ -65,9 +62,7 @@ class EnelEventHandler(EventHandler):
         app_scale_out_map = application.scale_out_map
         app_scale_out_map[next_job_id] = app_scale_out_map.get(next_job_id, app_scale_out_map.get(job_id))
 
-        # trigger prediction request if not a training run
-        if application.is_adaptive:
-            application.try_handle_online_scale_out_request(message, self.hdfs_api, self.mongo_api)
+        application.try_handle_online_scale_out_request(message, self.hdfs_api, self.mongo_api)
 
         if app_scale_out_map[next_job_id] != app_scale_out_map.get(job_id):
             return ResponseMessage(
@@ -87,6 +82,7 @@ class EnelEventHandler(EventHandler):
             job_id=message.job_id,
             start_time=message.app_time,
             start_scale_out=message.num_executors,
+            stages={}
         )
         self.running_applications.get(message.app_event_id).put_info_map(message.job_id, job_info)
 
@@ -107,7 +103,7 @@ class JobInfo(BaseModel):
     end_scale_out: int = None
     predicted_scale_out: int = None
     rescaling_time_ratio: float = None
-    stages: dict[str, Stage] = {}
+    stages: dict[str, Stage]
 
 class RunningApplication:
     def __init__(self, app_event_id: str, app_start_message: AppStartMessage):
@@ -118,7 +114,6 @@ class RunningApplication:
         self.job_info_map: dict[str, JobInfo] = {}
         self.scale_out_map: dict[int, int] = {}
         self.lastPredictionLength = -1
-        self.future_buffer: Queue = Queue(maxsize=3)  # maximum 3 concurrent requests allowed
 
     def put_info_map(self, job_id: int, job_info: JobInfo):
         map_key = self.to_map_key(job_id)
@@ -129,43 +124,33 @@ class RunningApplication:
 
     def try_handle_online_scale_out_request(self, message, hdfs_api: HdfsApi, mongo_api: MongoApi):
 
-        request_prediction = self.future_buffer.qsize() <= 3
-        if request_prediction:
-            prediction_request = self.to_online_scale_out_prediction_request(message.job_id, request_prediction)
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                # called function is async, but we want to wrap it in a future
-                prediction_request = executor.submit(asyncio.run(
-                    handle_online_scale_out_prediction(prediction_request, executor, hdfs_api, mongo_api)
-                ))
-                self.future_buffer.put(prediction_request)
+        request_prediction = self.is_adaptive
+        prediction_request = self.to_online_scale_out_prediction_request(message.job_id, request_prediction)
+        prediction_response = asyncio.run(
+            handle_online_scale_out_prediction(prediction_request, None, hdfs_api, mongo_api)
+        )
 
-        for future in self.future_buffer.queue:
-            if not future.done():
-                continue
-            else:
-                self.future_buffer.queue.remove(future)
-                result = OnlineScaleOutPredictionResponse(**future.result())
-                remaining_jobs = list(filter(
-                    lambda _tuple: _tuple[0] >= message.job_id,
-                    result.best_predicted_scale_out_per_job
-                ))
+        remaining_jobs = list(filter(
+            lambda _tuple: _tuple[0] >= message.job_id,
+            prediction_response.best_predicted_scale_out_per_job
+        ))
 
-                # last job, skip update of predicted scale outs
-                if len(remaining_jobs) == 0:
-                    continue
+        # last job, skip update of predicted scale outs
+        if len(remaining_jobs) == 0:
+            return
 
-                remaining_jobs = list(sorted(
-                    remaining_jobs,
-                    key=lambda _tuple: _tuple[0]
-                ))
+        remaining_jobs = list(sorted(
+            remaining_jobs,
+            key=lambda _tuple: _tuple[0]
+        ))
 
-                best_scale_out_per_job = result.best_predicted_scale_out_per_job
-                if self.lastPredictionLength == -1 or self.lastPredictionLength > len(best_scale_out_per_job):
-                    self.lastPredictionLength = len(best_scale_out_per_job)
-                    for sub_list in remaining_jobs:
-                        if sub_list[0] == (message.job_id + 1):
-                            # Update the predicted scale-out map
-                            self.scale_out_map[sub_list[0]] = sub_list[-1]
+        best_scale_out_per_job = prediction_response.best_predicted_scale_out_per_job
+        if self.lastPredictionLength == -1 or self.lastPredictionLength > len(best_scale_out_per_job):
+            self.lastPredictionLength = len(best_scale_out_per_job)
+            for sub_list in remaining_jobs:
+                if sub_list[0] == (message.job_id + 1):
+                    # Update the predicted scale-out map
+                    self.scale_out_map[sub_list[0]] = sub_list[-1]
 
     def to_online_scale_out_prediction_request(self, job_id: int, request_prediction: bool) -> OnlineScaleOutPredictionRequest:
         job_info = self.job_info_map.get(self.to_map_key(job_id))

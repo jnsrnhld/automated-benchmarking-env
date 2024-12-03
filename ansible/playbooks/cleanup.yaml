@@ -27,6 +27,18 @@
         state: absent
         wait: true
 
+    - name: Remove kube-prometheus-stack Helm release
+      kubernetes.core.helm:
+        name: kube-prometheus-stack
+        state: absent
+        release_namespace: "{{ k8s_namespace }}"
+        wait: true
+
+    - name: Remove prometheus-community repository
+      kubernetes.core.helm_repository:
+        name: prometheus-community
+        state: absent
+
 - name: Remove bind-mount directories for PersistentVolumes on all nodes
   hosts: remote
   become: true
@@ -73,6 +85,7 @@
 
     - name: Delete SparkApplications
       kubernetes.core.k8s:
+        api_version: sparkoperator.k8s.io/v1beta2
         kind: SparkApplication
         name: "{{ item }}"
         namespace: "{{ k8s_namespace }}"

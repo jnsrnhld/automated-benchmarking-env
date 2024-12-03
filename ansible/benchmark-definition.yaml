@@ -36,8 +36,8 @@ workloads:
 
 # configuration
 is_adaptive: false
-runs: 3 # iterations of data generation and benchmark jobs
-skip_data_generation: true # data generation can be skipped if you run the benchmark multiple times
+runs: 10 # iterations of data generation and benchmark jobs
+skip_data_generation: false # data generation can be skipped if you run the benchmark multiple times
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_cores: 1
 executor_cores: 1

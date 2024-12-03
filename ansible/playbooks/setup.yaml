@@ -152,6 +152,40 @@
       when: helm_installed.failed
       become: true
 
+- name: Deploy Prometheus Operator and Grafana
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: true
+  tasks:
+    - name: Add prometheus-community repository
+      kubernetes.core.helm_repository:
+        name: prometheus-community
+        repo_url: https://prometheus-community.github.io/helm-charts
+
+    - name: Deploy kube-prometheus-stack helm chart
+      kubernetes.core.helm:
+        name: kube-prometheus-stack
+        chart_ref: prometheus-community/kube-prometheus-stack
+        chart_version: "{{ kube_prometheus_stack_version }}"
+        release_namespace: "{{ k8s_monitoring_namespace }}"
+        create_namespace: true
+        atomic: true
+        wait: true
+        values:
+          prometheusOperator:
+            createCustomResource: true
+          prometheus:
+            prometheusSpec:
+              serviceMonitorSelectorNilUsesHelmValues: false
+              podMonitorSelectorNilUsesHelmValues: false
+          grafana:
+            adminUser: "{{ grafana_admin_user }}"
+            adminPassword: "{{ grafana_admin_password }}"
+          alertmanager:
+            alertmanagerSpec:
+              replicas: 1
+
 - name: Deploy spark-operator helm chart
   hosts: leader
   vars_files:
@@ -172,8 +206,15 @@
         atomic: true
         wait: true
         values:
+          commonLabels:
+            app: spark-operator
           webhook:
             enable: true
+          prometheus:
+            metrics:
+              enable: true
+            podMonitor:
+              create: true
 
 - name: Deploy MongoDB replica set
   hosts: leader

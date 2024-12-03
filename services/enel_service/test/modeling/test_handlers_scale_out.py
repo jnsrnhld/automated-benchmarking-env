@@ -37,6 +37,7 @@ class TestHandleOnlineScaleOutPrediction(TestCase):
             "start_scale_out": 1,
             "end_scale_out": 1,
             "global_specs": {
+                "is_adaptive": True,
                 "solution_name": "enel",
                 "system_name": "spark",
                 "template_version": "v1",

@@ -19,7 +19,7 @@ from .training_routines import create_supervised_trainer
 from .transforms import CustomData
 from .losses import *
 from .models import OnlinePredictor
-from services.enel_service.config.base_model_config import BaseModelConfig
+from ..config.base_model_config import BaseModelConfig
 
 
 def timeit(f):
@@ -240,12 +240,20 @@ class OnlinePredictorModel(BaseModel):
                                                 1 + math.ceil(len(unique_execution_ids) * 0.2))).astype(int)
         logging.info(f"Validation indices from list: {list_val_indices}")
 
-        val_ids = [unique_execution_ids[idx] for
-                   idx in list_val_indices if idx < len(unique_execution_ids)]
+        val_ids = [unique_execution_ids[idx] for idx in list_val_indices]
         train_ids = [u_id for u_id in unique_execution_ids if u_id not in val_ids]
+
+        print(f"unique_executions: {unique_executions}")
+        print(f"unique_execution_ids: {unique_execution_ids}")
+        print(f"list_val_indices: {list_val_indices}")
+        print(f"val_ids: {val_ids}")
+        print(f"train_ids: {train_ids}")
 
         train_set: ExecutionSubset = ExecutionSubset.from_parent(dataset, train_ids, suffix="training")
         val_set: ExecutionSubset = ExecutionSubset.from_parent(train_set, val_ids, suffix="inference")
+
+        print(f"train_set: {train_set}")
+        print(f"val_set: {val_set}")
 
         return train_set, val_set
 
