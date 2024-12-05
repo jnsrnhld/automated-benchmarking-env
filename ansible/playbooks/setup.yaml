@@ -274,6 +274,48 @@
           arbiter:
             resourcesPreset: "{{ mongodb_resource_preset }}"
 
+- name: Deploy chaos-mesh helm chart
+  hosts: leader
+  vars_files:
+    - ../vars.yaml
+  become: true
+  tasks:
+    - name: Add chaos-mesh repository
+      kubernetes.core.helm_repository:
+        name: chaos-mesh
+        repo_url: https://charts.chaos-mesh.org
+
+    - name: Deploy chaos-mesh helm chart
+      kubernetes.core.helm:
+        name: chaos-mesh
+        chart_ref: chaos-mesh/chaos-mesh
+        chart_version: "{{ chaos_mesh_chart_version }}"
+        release_namespace: "{{ k8s_chaos_mesh_namespace }}"
+        create_namespace: true
+        atomic: true
+        wait: true
+
+    - name: Deploy a PodChaos resource for random termination of Spark executor pods
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python3"
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: PodChaos
+          metadata:
+            name: spark-pod-termination
+            namespace: "{{ k8s_namespace }}"
+          spec:
+            action: pod-kill
+            mode: one
+            selector:
+              labelSelectors:
+                spark-role: "executor"
+            scheduler:
+              cron: "{{ termination_window }}"
+            duration: "0s"
+
 - name: Deploy Hadoop
   hosts: remote
   vars_files:
