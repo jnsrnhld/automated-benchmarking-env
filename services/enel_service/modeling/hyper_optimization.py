@@ -125,7 +125,7 @@ class HyperOptimizer(object):
                                                 scheduler=scheduler,
                                                 progress_reporter=reporter,
                                                 search_alg=search_alg,
-                                                local_dir=os.path.join(general_settings.temp_dir, "ray_results"),
+                                                storage_path=os.path.join(general_settings.temp_dir, "ray_results"),
                                                 stop=stopper,
                                                 checkpoint_score_attr="min-validation_loss",
                                                 mode="min",

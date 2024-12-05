@@ -1,0 +1,6 @@
+{
+  "system_name": "spark",
+  "algorithm_name": "ALS",
+  "model_name": "onlinepredictor",
+  "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)"
+}

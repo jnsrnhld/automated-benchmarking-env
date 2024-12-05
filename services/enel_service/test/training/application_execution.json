@@ -1,0 +1,1615 @@
+[
+  {
+    "_id": "67515d4e6dc2e74496ed06a3",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T07:59:07.587Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T07:59:18.678Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "RatingDataGeneration",
+      "algorithm_name": "RatingDataGeneration",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515d4e6dc2e74496ed06a3",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "67515d4e6dc2e74496ed06a3",
+    "application_signature": "RatingDataGeneration",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T07:59:10.918Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T07:59:18.799Z"
+    }
+  },
+  {
+    "_id": "67515daa6dc2e74496ed06a8",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:00:39.612Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:01:02.735Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515daa6dc2e74496ed06a8",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515daa6dc2e74496ed06a8",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:00:42.853Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:01:02.761Z"
+    }
+  },
+  {
+    "_id": "67515ddd6dc2e74496ed06e9",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:01:30.628Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:01:51.087Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515ddd6dc2e74496ed06e9",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "67515ddd6dc2e74496ed06e9",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T08:01:33.754Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:01:51.118Z"
+    }
+  },
+  {
+    "_id": "67515e0f6dc2e74496ed06f0",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:02:20.457Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:02:42.715Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515e0f6dc2e74496ed06f0",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515e0f6dc2e74496ed06f0",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:02:23.586Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:02:42.74Z"
+    }
+  },
+  {
+    "_id": "67515e3d6dc2e74496ed0731",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:03:06.547Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:03:27.094Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 1,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515e3d6dc2e74496ed0731",
+          "is_adaptive": false,
+          "initial_executors": 1
+        }
+      }
+    },
+    "application_id": "67515e3d6dc2e74496ed0731",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 1,
+    "created_at": {
+      "$date": "2024-12-05T08:03:09.832Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:03:27.126Z"
+    }
+  },
+  {
+    "_id": "67515e6f6dc2e74496ed0738",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:03:55.914Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:04:18.499Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515e6f6dc2e74496ed0738",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515e6f6dc2e74496ed0738",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:03:59.092Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:04:18.521Z"
+    }
+  },
+  {
+    "_id": "67515ea26dc2e74496ed0779",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:04:47.223Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:05:07.831Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 1,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515ea26dc2e74496ed0779",
+          "is_adaptive": false,
+          "initial_executors": 1
+        }
+      }
+    },
+    "application_id": "67515ea26dc2e74496ed0779",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 1,
+    "created_at": {
+      "$date": "2024-12-05T08:04:50.301Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:05:07.892Z"
+    }
+  },
+  {
+    "_id": "67515ed36dc2e74496ed0780",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:05:36.614Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:06:00.428Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 1,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515ed36dc2e74496ed0780",
+          "is_adaptive": false,
+          "initial_executors": 1
+        }
+      }
+    },
+    "application_id": "67515ed36dc2e74496ed0780",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 1,
+    "created_at": {
+      "$date": "2024-12-05T08:05:39.841Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:06:00.45Z"
+    }
+  },
+  {
+    "_id": "67515f076dc2e74496ed07c1",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:06:28.145Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:06:49.477Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515f076dc2e74496ed07c1",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "67515f076dc2e74496ed07c1",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T08:06:31.347Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:06:49.504Z"
+    }
+  },
+  {
+    "_id": "67515f386dc2e74496ed07c8",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:07:17.536Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:07:39.638Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515f386dc2e74496ed07c8",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515f386dc2e74496ed07c8",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:07:20.746Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:07:39.659Z"
+    }
+  },
+  {
+    "_id": "67515f666dc2e74496ed0809",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:08:03.363Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:08:24.244Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515f666dc2e74496ed0809",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "67515f666dc2e74496ed0809",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T08:08:06.616Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:08:24.274Z"
+    }
+  },
+  {
+    "_id": "67515f986dc2e74496ed0810",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:08:52.685Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:09:17.421Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515f986dc2e74496ed0810",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515f986dc2e74496ed0810",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:08:56.02Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:09:17.451Z"
+    }
+  },
+  {
+    "_id": "67515fcb6dc2e74496ed0851",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:09:44.152Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:10:04.812Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515fcb6dc2e74496ed0851",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515fcb6dc2e74496ed0851",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:09:47.397Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:10:04.842Z"
+    }
+  },
+  {
+    "_id": "67515ffc6dc2e74496ed0858",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:10:33.271Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:10:53.993Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "67515ffc6dc2e74496ed0858",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "67515ffc6dc2e74496ed0858",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:10:36.407Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:10:54.016Z"
+    }
+  },
+  {
+    "_id": "6751602b6dc2e74496ed0899",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:11:20.15Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:11:40.82Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "6751602b6dc2e74496ed0899",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "6751602b6dc2e74496ed0899",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:11:23.388Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:11:40.858Z"
+    }
+  },
+  {
+    "_id": "6751605c6dc2e74496ed08a0",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:12:09.028Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:12:30.83Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "6751605c6dc2e74496ed08a0",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "6751605c6dc2e74496ed08a0",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T08:12:12.217Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:12:30.851Z"
+    }
+  },
+  {
+    "_id": "6751608a6dc2e74496ed08e1",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:12:55.156Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:13:16.401Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "6751608a6dc2e74496ed08e1",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "6751608a6dc2e74496ed08e1",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:12:58.471Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:13:16.443Z"
+    }
+  },
+  {
+    "_id": "675160bb6dc2e74496ed08e8",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:13:44.219Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:14:07.172Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "675160bb6dc2e74496ed08e8",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "675160bb6dc2e74496ed08e8",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:13:47.406Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:14:07.195Z"
+    }
+  },
+  {
+    "_id": "675160ea6dc2e74496ed0929",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:14:30.874Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:14:51.508Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 2,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "675160ea6dc2e74496ed0929",
+          "is_adaptive": false,
+          "initial_executors": 2
+        }
+      }
+    },
+    "application_id": "675160ea6dc2e74496ed0929",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 2,
+    "created_at": {
+      "$date": "2024-12-05T08:14:34.144Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:14:51.542Z"
+    }
+  },
+  {
+    "_id": "6751611b6dc2e74496ed0930",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:15:20.067Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:15:41.319Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+      "algorithm_name": "ALS",
+      "algorithm_args": [
+        "hdfs://10.240.0.10:9000/HiBench/ALS/Input",
+        "10",
+        "0.1",
+        "10",
+        "1",
+        "1",
+        "true"
+      ],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 3,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "6751611b6dc2e74496ed0930",
+          "is_adaptive": false,
+          "initial_executors": 3
+        }
+      }
+    },
+    "application_id": "6751611b6dc2e74496ed0930",
+    "application_signature": "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 3,
+    "created_at": {
+      "$date": "2024-12-05T08:15:23.551Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:15:41.352Z"
+    }
+  },
+  {
+    "_id": "675161496dc2e74496ed0971",
+    "start_scale_out": 2,
+    "end_scale_out": 2,
+    "start_time": {
+      "$date": "2024-12-05T08:16:06.373Z"
+    },
+    "end_time": {
+      "$date": "2024-12-05T08:16:27.188Z"
+    },
+    "global_specs": {
+      "solution_name": "enel",
+      "system_name": "spark",
+      "template_version": "v1",
+      "experiment_name": "ScalaScan",
+      "algorithm_name": "ScalaScan",
+      "algorithm_args": [],
+      "data_size_MB": 1,
+      "data_characteristics": "",
+      "machine_name": "os:GNU/LinuxUbuntu20.04.6LTS(FocalFossa)build6.8.0-1018-gcp-cores:4-memory:32094.55859375-disk_size:125.0",
+      "environment_name": "",
+      "is_adaptive": false,
+      "min_scale_out": 1,
+      "max_scale_out": 3,
+      "max_runtime": 50000
+    },
+    "optional_specs": {
+      "hadoop_version": "3.3.6",
+      "spark_version": "3.5.3",
+      "scala_version": "2.12.20",
+      "java_version": "8"
+    },
+    "master_specs": {
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "worker_specs": {
+      "scale_out": 1,
+      "cores": 1,
+      "memory": "8192m",
+      "memory_overhead": "819.2m"
+    },
+    "flink_template_values": {},
+    "spark_template_values": {
+      "scale_out_tuner": {
+        "config": {
+          "method": "enel",
+          "rest_timeout": 30,
+          "service": "admin-service",
+          "port": 5000,
+          "online_scale_out_prediction_endpoint": "prediction/online_scale_out_prediction",
+          "update_information_endpoint": "training/update_information",
+          "application_execution_id": "675161496dc2e74496ed0971",
+          "is_adaptive": false,
+          "initial_executors": 1
+        }
+      }
+    },
+    "application_id": "675161496dc2e74496ed0971",
+    "application_signature": "ScalaScan",
+    "attempt_id": "",
+    "fit_time": null,
+    "predict_time": null,
+    "preparation_time": null,
+    "predicted_scale_out": 1,
+    "created_at": {
+      "$date": "2024-12-05T08:16:09.67Z"
+    },
+    "updated_at": {
+      "$date": "2024-12-05T08:16:27.222Z"
+    }
+  }
+]

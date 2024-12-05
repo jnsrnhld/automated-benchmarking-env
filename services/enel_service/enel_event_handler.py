@@ -3,6 +3,7 @@ import asyncio
 from bson.json_util import ObjectId
 from pydantic import BaseModel
 
+from .modeling.handlers_training import handle_trigger_model_training
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model
@@ -32,10 +33,8 @@ class EnelEventHandler(EventHandler):
         application_execution_model = application.to_application_execution_model(message)
         asyncio.run(alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api))
 
-        # training run? TODO does not work
-        # if not application.is_adaptive:
-        #     training_request = application.to_trigger_model_training_request(application_execution_model)
-        #     asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
+        training_request = application.to_trigger_model_training_request(application_execution_model)
+        asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
 
         # update it
         update_request = application.to_update_information_request(message)
@@ -109,7 +108,7 @@ class RunningApplication:
     def __init__(self, app_event_id: str, app_start_message: AppStartMessage):
         self.is_adaptive = app_start_message.is_adaptive
         self.app_event_id = app_event_id
-        self.application_id = app_start_message.application_id
+        self.application_id = app_event_id
         self.app_signature = app_start_message.app_name
         self.job_info_map: dict[str, JobInfo] = {}
         self.scale_out_map: dict[int, int] = {}
@@ -156,7 +155,7 @@ class RunningApplication:
         job_info = self.job_info_map.get(self.to_map_key(job_id))
         return OnlineScaleOutPredictionRequest(
             application_execution_id=self.app_event_id,
-            application_id=self.application_id,
+            application_id=self.app_event_id,
             job_id=job_id,
             update_event=EventType.JOB_END,
             updates=RootDataUpdateModel(**job_info.dict()),
@@ -166,10 +165,10 @@ class RunningApplication:
     def to_update_information_request(self, message: AppStartMessage):
         return UpdateInformationRequest(
             application_execution_id=self.app_event_id,
-            application_id=message.application_id,
+            application_id=self.app_event_id,
             update_event=EventType.APPLICATION_START,
             updates=(RootDataUpdateModel(
-                application_id=message.app_name,
+                application_id=self.app_event_id,
                 application_signature=message.app_name,
                 attempt_id=message.attempt_id,
                 start_time=message.app_time,

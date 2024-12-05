@@ -595,7 +595,6 @@ class NeighborScanner(BaseTransformer):
             related_prev_holders = NeighborScanner.filter_neighbors(prev_holder, related_prev_holders)
         else:  # in this case, use scale-out from current job
             related_prev_holders = NeighborScanner.filter_neighbors(holder, related_prev_holders)
-        print("Direct Prev-Holder not None:", prev_holder_not_none, "\n")
 
         if len(related_prev_holders):
             related_prev_metrics = torch.mean(torch.cat([el.stage_metrics for el in related_prev_holders], dim=0),
