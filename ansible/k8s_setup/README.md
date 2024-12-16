@@ -1,9 +1,13 @@
-##### Deploy k8s cluster via kubespray
+# Deploy k8s cluster via kubespray
 
-You may want to use this directory and the following instructions in case a kubernetes cluster
+You may want to use this directory and the following instructions in case a Kubernetes cluster
 fulfilling the requirements is not deployed yet.
 
-# TODO create requirements
+## Deploy a VM cluster on Azure or Google Cloud
+The scripts [azure_setup](azure_setup.bash) and [gcloud_setup](gcloud_setup.bash) are exemplary scripts for the setup 
+of a set of leader and follower VMs with required settings to install Kubernetes and the required software stack.
+
+## Kubernetes Deployment 
 
 ```shell
 # setup kubespray from within ansible dir
@@ -27,7 +31,7 @@ HDFS to work with k8s.
 Command to set `KUBECONFIG` temporarily: `export KUBECONFIG=/$PWD/inventory/mycluster/artifacts/admin.conf`.
 You have to adjust the IP to one of the public IP addresses you passed to `supplementary_addresses_in_ssl_keys`.
 
-###### Start/Reset the cluster
+### Start/Reset the cluster
 
 ```shell
 # reset a running cluster
@@ -38,7 +42,7 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES # only if run on macOS https://gi
 ansible-playbook -i inventory/mycluster/hosts.yaml  --become --become-user=root cluster.yml
 ```
 
-###### Access cluster from local machine
+### Access cluster from local machine
 
 ```shell
 # points to the admin.conf file generated automatically
