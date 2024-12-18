@@ -677,7 +677,7 @@ class OnlinePredictorFinalizer(BaseTransformer):
         job_context_opt: torch.Tensor = handler.collapse(handler.get_values("context_opt"))
 
         # repeat so that each real node has the context at hand
-        num_nodes: int = handler.collapse(handler.get_values("num_nodes"))
+        num_nodes: int = len(handler.collapse(handler.get_values("stage_context_batch")).unique())
         job_context_emb = job_context_emb.repeat(num_nodes, 1)
         job_context_opt = job_context_opt.repeat(num_nodes, 1)
         handler.set_dict_value("context_emb", job_context_emb)

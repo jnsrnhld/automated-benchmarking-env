@@ -31,21 +31,23 @@ class EnelEventHandler(EventHandler):
 
         # add the application
         application_execution_model = application.to_application_execution_model(message)
-        asyncio.run(alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api))
-
-        training_request = application.to_trigger_model_training_request(application_execution_model)
-        asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
+        updated: ApplicationExecutionModel = asyncio.run(
+            alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api)
+        )
+        initial_scaleout = updated.worker_specs.scale_out
+        application.scale_out_map[0] = initial_scaleout
 
         # update it
         update_request = application.to_update_information_request(message)
         asyncio.run(handle_update_information(update_request, self.mongo_api))
 
-        # initial job has initial executors
-        application.scale_out_map[0] = message.app_specs.initial_executors
+        # TODO implement training flag
+        # training_request = application.to_trigger_model_training_request(application_execution_model)
+        # asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
 
         return ResponseMessage(
             app_event_id=app_event_id,
-            recommended_scale_out=message.app_specs.initial_executors
+            recommended_scale_out=initial_scaleout
         )
 
     def handle_job_start(self, message: JobStartMessage) -> ResponseMessage:
@@ -170,17 +172,15 @@ class RunningApplication:
             updates=(RootDataUpdateModel(
                 application_id=self.app_event_id,
                 application_signature=message.app_name,
-                attempt_id=message.attempt_id,
                 start_time=message.app_time,
-                start_scale_out=message.app_specs.initial_executors
             )),
         )
 
     def to_application_execution_model(self, message: AppStartMessage) -> ApplicationExecutionModel:
         return ApplicationExecutionModel(
             _id=self.app_event_id,
-            start_scale_out=message.app_specs.initial_executors,  # will be overridden eventually
-            end_scale_out=message.app_specs.initial_executors,  # will be overridden eventually
+            start_scale_out=1, # placeholder, will be overwritten
+            end_scale_out=1, # placeholder, will be overwritten
             global_specs=GlobalSpecsModel(
                 solution_name="enel",
                 system_name="spark",

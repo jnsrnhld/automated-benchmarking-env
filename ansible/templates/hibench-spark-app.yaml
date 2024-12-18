@@ -44,9 +44,8 @@ spec:
         value: /mnt/config-maps/hibench.conf
   dynamicAllocation:
     enabled: True
-    initialExecutors: {{ initial_executors }}
-    minExecutors: {{ min_executors }}
-    maxExecutors: {{ max_executors }}
+    # initially forces Spark to not create an executor, so we can use the initial scale-out recommendation
+    minExecutors: 0
   deps:
     jars:
       - {{ listener_jar }}
@@ -55,6 +54,8 @@ spec:
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
     "spark.customExtraListener.isAdaptive": "{{ is_adaptive }}"
     "spark.customExtraListener.bridgeServiceAddress": "{{ bridge_service_address }}"
+    "spark.customExtraListener.minExecutors": "{{ min_executors }}"
+    "spark.customExtraListener.maxExecutors": "{{ max_executors }}"
     # listener app spec
     "spark.customExtraListener.datasizeMb": "{{ datasize_mb }}"
     "spark.customExtraListener.targetRuntime": "{{ target_runtime }}"

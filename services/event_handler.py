@@ -49,7 +49,6 @@ class AppSpecs(BaseModel):
     algorithm_args: List[str]
     datasize_mb: int
     target_runtime: int
-    initial_executors: int
     min_executors: int
     max_executors: int
 
@@ -85,7 +84,6 @@ class AppStartMessage(BaseModel):
     application_id: str  # spark app id
     app_name: str  # spark app signature
     app_time: int
-    attempt_id: Optional[str]
     is_adaptive: bool
     app_specs: AppSpecs
     driver_specs: DriverSpecs
@@ -172,7 +170,7 @@ class EventHandler(ABC):
     def no_op_app_start_response(message: AppStartMessage) -> ResponseMessage:
         return ResponseMessage(
             app_event_id="No_op_recommendation",
-            recommended_scale_out=message.initial_executors,
+            recommended_scale_out=message.app_specs.min_executors,
         )
 
     @staticmethod
@@ -189,7 +187,7 @@ class EventHandler(ABC):
             recommended_scale_out=message.num_executors
         )
 
-
+# The NoOpEventHandler will recommend the minimum number of executors set in the app specs.
 class NoOpEventHandler(EventHandler):
 
     def __init__(self, db):

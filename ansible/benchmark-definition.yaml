@@ -12,11 +12,11 @@ workloads:
   - { name: "terasort", enabled: false, category: "micro" }
   - { name: "wordcount", enabled: false, category: "micro" }
 #  # MACHINE LEARNING
-  - { name: "als", enabled: true, category: "ml" }
+  - { name: "als", enabled: false, category: "ml" }
   - { name: "bayes", enabled: false, category: "ml" }
   - { name: "gbt", enabled: false, category: "ml" }
   - { name: "gmm", enabled: false, category: "ml" }
-  - { name: "kmeans", enabled: false, category: "ml" }
+  - { name: "kmeans", enabled: true, category: "ml" }
   - { name: "lda", enabled: false, category: "ml" }
   - { name: "linear", enabled: false, category: "ml" } # requires way more memory than other jobs!
   - { name: "lr", enabled: false, category: "ml" }
@@ -25,7 +25,7 @@ workloads:
   - { name: "svd", enabled: false, category: "ml" }
   - { name: "svm", enabled: false, category: "ml" }
 #  # SQL
-  - { name: "scan", enabled: true, category: "sql" }
+  - { name: "scan", enabled: false, category: "sql" }
   - { name: "join", enabled: false, category: "sql" }
   - { name: "aggregation", enabled: false, category: "sql" }
 #  # WEBSEARCH
@@ -36,7 +36,7 @@ workloads:
 
 # configuration
 is_adaptive: false
-runs: 1 # iterations of data generation and benchmark jobs
+runs: 10 # iterations of data generation and benchmark jobs
 skip_data_generation: true # data generation can be skipped if you run the benchmark multiple times
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_cores: 1
@@ -44,6 +44,5 @@ executor_cores: 1
 driver_memory: 8192m
 executor_memory: 8192m
 target_runtime: 50000
-initial_executors: 2
 min_executors: 1
 max_executors: 3

@@ -473,12 +473,12 @@
           export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
           export PATH=$JAVA_HOME/bin:$PATH
           export PDSH_RCMD_TYPE=ssh
-          
+
           # stopping services
           bin/hdfs --daemon stop namenode
           bin/yarn --daemon stop resourcemanager
           sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
-          
+
           # starting services
           bin/hdfs namenode -format
           bin/hdfs --daemon start namenode
@@ -515,12 +515,12 @@
           export JAVA_HOME=$(readlink -f $(which java) | sed "s:bin/java::")
           export PATH=$JAVA_HOME/bin:$PATH
           export PDSH_RCMD_TYPE=ssh
-          
+
           # stopping services
           bin/hdfs --daemon stop datanode
           bin/yarn --daemon stop nodemanager
           sudo rm -rf /tmp/hadoop-{{ linux_username }}/*
-          
+
           # starting services
           bin/hdfs namenode -format
           bin/hdfs --daemon start datanode
@@ -649,6 +649,22 @@
         - { src: "sql.scan.run.sh", target: "bin/workloads/sql/scan/spark/run.sh" }
         - { src: "workload_functions.sh", target: "bin/functions" }
         - { src: "sparkapp-templater.py", target: "" }
+
+    - name: Find all Scala files recursively
+      find:
+        paths: "{{ hibench_dir }}/sparkbench"
+        patterns: "*.scala"
+        recurse: true
+      register: scala_files
+
+    - name: Update SparkContext initialization in Scala files
+      lineinfile:
+        path: "{{ item.path }}"
+        regexp: '^\\s*val\\s+(sc|ctx)\\s*=\\s*new\\s+SparkContext(.*)$'
+        line: 'val \\1 = SparkContext.getOrCreate\\2'
+        backrefs: yes
+      with_items: "{{ scala_files.files }}"
+      when: scala_files.matched > 0
 
     - name: Build HiBench
       shell:

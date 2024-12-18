@@ -30,9 +30,6 @@ class EllisEventHandler(EventHandler):
         app_specs = message.app_specs
         self.running_applications[app_event_id] = RunningApplication(app_event_id, message)
 
-        if not message.is_adaptive:
-            return self.no_op_app_start_response(message)
-
         initial_scaleout = self.ellis_utils.compute_initial_scale_out(
             app_event_id, message.app_name, app_specs.min_executors, app_specs.max_executors, app_specs.target_runtime
         )
@@ -53,7 +50,7 @@ class EllisEventHandler(EventHandler):
         self.update_job_event(message)
 
         (scale_outs, _) = self.ellis_utils.get_non_adaptive_runs(running_app.app_event_id, running_app.app_signature)
-        if (not running_app.is_adaptive) or scale_outs.size > 3:
+        if running_app.is_adaptive and scale_outs.size > 3:
             recommended_scale_out = self.ellis_utils.update_scaleout(
                 message.app_event_id,
                 message.job_id,
@@ -86,7 +83,6 @@ class EllisEventHandler(EventHandler):
             'app_id': message.app_name,
             'started_at': message.app_time,
             'target_runtime': message.app_specs.target_runtime,
-            'initial_executors': message.app_specs.initial_executors,
             'min_executors': message.app_specs.min_executors,
             'max_executors': message.app_specs.max_executors,
         })

@@ -67,7 +67,6 @@
           # app spec
           bridge_service_address: {{ bridge_service_address }}
           target_runtime: {{ target_runtime }}
-          initial_executors: {{ initial_executors }}
           min_executors: {{ min_executors }}
           max_executors: {{ max_executors }}
           # driver spec
