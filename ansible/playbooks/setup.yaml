@@ -660,8 +660,8 @@
     - name: Update SparkContext initialization in Scala files
       lineinfile:
         path: "{{ item.path }}"
-        regexp: '^\\s*val\\s+(sc|ctx)\\s*=\\s*new\\s+SparkContext(.*)$'
-        line: 'val \\1 = SparkContext.getOrCreate\\2'
+        regexp: '^\s*val\s+(sc|ctx)\s*=\s*new\s+SparkContext(.*)$'
+        line: val \g<1> = SparkContext.getOrCreate\g<2>
         backrefs: yes
       with_items: "{{ scala_files.files }}"
       when: scala_files.matched > 0
