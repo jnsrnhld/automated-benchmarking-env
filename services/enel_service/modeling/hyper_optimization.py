@@ -1,12 +1,13 @@
 import os
 from typing import Optional, Tuple
-
+import tempfile
 import torch
 import logging
 import time
 from functools import partial
 import torch.nn as nn
-from ray import tune
+from ray import tune, train
+from ray.train import Checkpoint
 from ray.tune.stopper import TrialPlateauStopper
 from ray.tune.search.optuna import OptunaSearch
 from ray.tune.search import ConcurrencyLimiter
@@ -149,7 +150,7 @@ class HyperOptimizer(object):
         best_checkpoint_dir = analysis.get_best_checkpoint(best_trial)
 
         model_state_dict, optimizer_state_dict, trainer_state_dict, evaluator_state_dict = torch.load(
-            os.path.join(best_checkpoint_dir, "checkpoint"), weights_only=False)
+            os.path.join(best_checkpoint_dir.path, "checkpoint"), weights_only=False)
 
         return {
                    "model_state_dict": model_state_dict,
@@ -279,23 +280,25 @@ class HyperOptimizer(object):
 
             current_epoch: int = trainer_instance.state.epoch
 
-            with tune.checkpoint_dir(current_epoch) as local_checkpoint_dir:
+            with tempfile.TemporaryDirectory(suffix=str(current_epoch)) as temp_checkpoint_dir:
+
                 model_state_dict = model.state_dict()
                 if isinstance(model, nn.DataParallel):
                     model_state_dict = model.module.state_dict()
 
                 # save model, optimizer and trainer checkpoints
-                path = os.path.join(local_checkpoint_dir, "checkpoint")
+                path = os.path.join(temp_checkpoint_dir, "checkpoint")
                 torch.save((model_state_dict, optimizer.state_dict(),
                             trainer_instance.state_dict(), evaluator.state_dict()), path)
+                my_checkpoint = Checkpoint.from_directory(temp_checkpoint_dir)
 
-            # report validation scores to ray-tune
-            report_dict: dict = {
-                **state_val_metrics,
-                "done": current_epoch == epochs
-            }
+                # report validation scores to ray-tune
+                report_dict: dict = {
+                    **state_val_metrics,
+                    "done": current_epoch == epochs
+                }
 
-            tune.report(**report_dict)
+                train.report(report_dict, checkpoint=my_checkpoint)
 
         # start training
         trainer.run(train_loader, max_epochs=epochs)

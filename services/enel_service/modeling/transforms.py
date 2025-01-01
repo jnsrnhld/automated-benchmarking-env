@@ -381,15 +381,17 @@ class ScaleOutEnricher(BaseTransformer):
 class StageGraphCreator(BaseTransformer):
     @staticmethod
     def __create_edge_index__(stages: Dict[str, StageDataModel]) -> Tuple[torch.Tensor, int, List[int]]:
-        all_stage_ids: List[List[int]] = [s.parent_stage_ids + [s.stage_id] for s in stages.values()]
-        all_stage_ids: List[int] = sorted(list(set(sum(all_stage_ids, []))))
+        all_stage_ids: List[str] = list(sorted(stages.keys(), key=lambda key: int(key)))
         edge_index_list: List[Tuple[int, int]] = []
         root_nodes: List[int] = []
-        for stage_id in sorted(stages.keys(), key=lambda key: int(key)):
-            for parent_stage_id in stages.get(stage_id).parent_stage_ids:
-                edge_index_list.append((all_stage_ids.index(parent_stage_id), all_stage_ids.index(int(stage_id))))
-            if len(stages.get(stage_id).parent_stage_ids) == 0:
-                root_nodes.append(all_stage_ids.index(int(stage_id)))
+        for stage_id in all_stage_ids:
+            if len(stages.get(stage_id).parent_stage_ids) == 0 or \
+                all([parent_stage_id not in all_stage_ids for parent_stage_id in stages.get(stage_id).parent_stage_ids]):
+                    root_nodes.append(all_stage_ids.index(stage_id))
+            else:
+                for parent_stage_id in stages.get(stage_id).parent_stage_ids:
+                    if parent_stage_id in all_stage_ids:
+                        edge_index_list.append((all_stage_ids.index(parent_stage_id), all_stage_ids.index(stage_id)))
 
         return torch.tensor(edge_index_list, dtype=torch.long).t().contiguous(), len(all_stage_ids), root_nodes
 
@@ -436,9 +438,15 @@ class StageGraphCreator(BaseTransformer):
         handler.set_dict_value("stage_rescaling_time_ratio",
                                torch.tensor(stage_rescaling_time_ratio_list).reshape(-1, 1))
         handler.set_dict_value("stage_runtime", torch.tensor(stage_runtime_list).reshape(-1, 1))
-        handler.set_dict_value("stage_context", torch.cat(stage_context_list, dim=0))
-        handler.set_dict_value("stage_context_batch", torch.cat(stage_context_batch_list, dim=0))
-        handler.set_dict_value("stage_metrics", torch.cat(stage_metrics_list, dim=0))
+        stage_context = torch.cat(stage_context_list, dim=0)
+        handler.set_dict_value("stage_context", stage_context)
+        stage_context_batch = torch.cat(stage_context_batch_list, dim=0)
+        handler.set_dict_value("stage_context_batch", stage_context_batch)
+        stage_metrics = torch.cat(stage_metrics_list, dim=0)
+        handler.set_dict_value("stage_metrics", stage_metrics)
+
+        assert num_nodes == len(stage_context_batch.unique()) == len(stage_metrics)
+
         return handler
 
 
@@ -691,6 +699,7 @@ class OnlinePredictorFinalizer(BaseTransformer):
         opt_batch_list = sum([[i] * int(len(job_context_opt) / num_nodes) for i in range(num_nodes)], [])
         handler.set_dict_value("context_opt_batch",
                                torch.tensor(opt_batch_list, dtype=torch.long))
+
         return handler
 
 
