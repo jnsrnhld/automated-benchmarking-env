@@ -24,9 +24,14 @@
         line: '%{{ linux_username }} ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
 
-    - name: Install acl to fix a tmp-file creation issue when running ansible tasks as non-root user
+    - name: Install acl to fix a tmp-file creation issue when running ansible tasks as non-root user + more essential deps
       apt:
-        name: acl
+        pkg:
+         - acl
+         # below are all required for Ellis/Enel pip deps
+         - libkrb5-dev
+         - build-essential
+         - python3.10-dev
         state: present
 
     - name: Create remote templating directory
@@ -39,6 +44,7 @@
 
 - name: Install Ansible/pip dependencies on leader machine
   hosts: leader
+  strategy: free
   vars_files:
     - ../vars.yaml
   become: true
@@ -318,6 +324,7 @@
 
 - name: Deploy Hadoop
   hosts: remote
+  strategy: free
   vars_files:
     - ../vars.yaml
   become: true
