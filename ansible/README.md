@@ -19,12 +19,10 @@ All the following commands are expected to be executed from project root directo
 
 ### Spark image
 
-Because HiBench does not support Spark versions later than 3.1.1 and there are no public available images of this 
-version which work with the kubeflow spark-operator (as of late 2024), you may provide a spark image with the desired 
-version and set its name in the ansible [vars](vars.yaml) file.
+In case you want to provide a spark image, follow the steps below and set the image name in the ansible 
+[vars](vars.yaml) file.
 
-Therefore, follow these step after cloning the [spark repository](https://github.com/apache/spark) and creating a 
-docker repository on dockerhub:
+After cloning the [spark repository](https://github.com/apache/spark) and creating a docker repository on dockerhub, follow these steps:
 ```bash
 # checkout to the target version, e.g. 3.1.1
 git checkout "v.3.1.1"
@@ -40,23 +38,23 @@ bin/docker-image-tool.sh -r $YOUR_DOCKERHUB_USERNAME -t $VERSION_TAG push
 
 ## Software stack deployment using ansible
 
-##### Adjust cloud inventory
+#### Adjust cloud inventory
 
-[The cloud inventory](cloud.yaml) defines the setup for cloud machines:
+[The cloud inventory](inventory.yaml) defines the setup for cloud machines:
 - `remote` should contain all available remote machines.
 - `leader` should contain a machine which is used to execute kubectl/helm commands, runs the bridge service, 
 scaling services, database, etc.
 - `worker` are all machines that could be part of the hdfs cluster and/or contribute as workers to the batch processing 
 framework
 
-##### Run playbooks from root dir
+#### Run playbooks from root dir
 
 ```shell
 # Run playbook with cloud inventory: 
 ansible-playbook ansible/playbooks/setup.yaml --ask-become-pass
 ```
 
-###### Playbooks 
+### Playbooks 
 
 | name    | content                                                                                                                                                                                                                                                                                                                                                                         |
 |---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

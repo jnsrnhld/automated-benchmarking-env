@@ -1,7 +1,7 @@
 # Data scale profile. Available value is tiny, small, large, huge, gigantic and bigdata.
 # The definition of these profiles can be found in the workload's conf file,
 # i.e. https://github.com/Intel-bigdata/HiBench/blob/master/conf/workloads/micro/wordcount.conf
-scale: tiny # {tiny, small, large, huge, gigantic, bigdata}
+scale: large # {tiny, small, large, huge, gigantic, bigdata}
 
 # Which workloads do you want to run?
 workloads:
@@ -41,8 +41,8 @@ skip_data_generation: false # data generation can be skipped if you run the benc
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
 driver_cores: 1
 executor_cores: 1
-driver_memory: 8192m
-executor_memory: 8192m
-target_runtime: 50000
+driver_memory: 6G
+executor_memory: 6G
+target_runtime: 600000
 min_executors: 1
-max_executors: 3
+max_executors: 4

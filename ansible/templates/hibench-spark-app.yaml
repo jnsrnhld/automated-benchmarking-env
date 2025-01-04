@@ -75,6 +75,7 @@ spec:
     # set max resultsize to unlimited
     "spark.driver.maxResultSize": "0"
     # prevent spark dynamic allocation to actually work (we only want shuffle-tracking)
+    "spark.scheduler.minRegisteredResourcesRatio": "1.0"
     "spark.dynamicAllocation.shuffleTracking.enabled": "true"
     "spark.decommission.enabled": "true"
     "spark.storage.decommission.shuffleBlocks.enabled": "true"
