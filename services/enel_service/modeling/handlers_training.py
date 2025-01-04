@@ -1,7 +1,7 @@
 import copy
 import logging
 from functools import partial
-from typing import List, Any, Type, Tuple
+from typing import List, Any, Type, Tuple, Optional
 
 import pymongo
 from fastapi import HTTPException, status
@@ -21,13 +21,12 @@ from services.enel_service.modeling.utils import save_artifact
 # load settings
 general_settings: GeneralSettings = GeneralSettings.get_instance()
 mongo_settings: MongoSettings = MongoSettings.get_instance()
-# load model configs
-onlinepredictor_config: OnlinePredictorConfig = OnlinePredictorConfig()
 
 
 async def handle_trigger_model_training(request: TriggerModelTrainingRequest,
                                         mongo_api: MongoApi,
-                                        hdfs_api: HdfsApi):
+                                        hdfs_api: HdfsApi,
+                                        onlinepredictor_config: Optional[OnlinePredictorConfig] = None):
     # PREPARATION
     # extract request parameters
     system_name: str = request.system_name
@@ -45,7 +44,7 @@ async def handle_trigger_model_training(request: TriggerModelTrainingRequest,
     # retrieve model, config, and data
     if model_name == "onlinepredictor":
         shallow_model = OnlinePredictorModel
-        config = onlinepredictor_config
+        config = onlinepredictor_config or OnlinePredictorConfig()
         target_collection = mongo_settings.mongodb_job_execution_collection
     else:
         logging.error("Invalid Model-Type specified. Must be one of ['onlinepredictor'].")
