@@ -19,7 +19,7 @@ gcloud compute firewall-rules create kubespray-cluster-allow-external \
 --source-ranges 0.0.0.0/0
 
 # create control planes
-for i in 0; do # adjust amount of control planes if necessary
+for i in {0..0}; do # adjust amount of control planes if necessary
 gcloud compute instances create controller-${i} \
 --can-ip-forward \
 --create-disk=auto-delete=yes,boot=yes,device-name=instance-20240920-065704,image=projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20240904,mode=rw,size=125,type=pd-balanced \
@@ -32,7 +32,7 @@ gcloud compute instances create controller-${i} \
 done
 
 # create workers
-for i in 0 1; do # adjust amount of workers if necessary
+for i in {0..1}; do # adjust amount of workers if necessary
 gcloud compute instances create worker-${i} \
 --can-ip-forward \
 --machine-type e2-highmem-4 \

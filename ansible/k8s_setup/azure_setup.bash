@@ -6,7 +6,8 @@ VNET_NAME="kubespray-vnet"
 SUBNET_NAME="kubernetes-subnet"
 SUBNET_CIDR="10.240.0.0/24"
 NSG_NAME="kubespray-nsg"
-VM_SIZE="Standard_D4s_v3"
+VM_SIZE="Standard_D8s_v3"
+DISK_SIZE_GB="2048"
 IMAGE="Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest"
 TAGS="kubernetes-the-kubespray-way"
 SSH_PUBLIC_KEY="$HOME/.ssh/id_rsa.pub"
@@ -58,35 +59,37 @@ az network vnet subnet update \
   --network-security-group $NSG_NAME
 
 # Create control plane VMs
-for i in 0; do
+for i in {0..0}; do
   az vm create \
     --resource-group $RESOURCE_GROUP \
     --name controller-$i \
     --size $VM_SIZE \
     --image $IMAGE \
-    --admin-username azureuser \
+    --admin-username "$(whoami)" \
     --ssh-key-value $SSH_PUBLIC_KEY \
     --vnet-name $VNET_NAME \
     --subnet $SUBNET_NAME \
     --private-ip-address 10.240.0.1${i} \
     --nsg $NSG_NAME \
-    --tags $TAGS
+    --tags $TAGS \
+    --data-disk-sizes-gb $DISK_SIZE_GB
 done
 
 # Create worker VMs
-for i in 0; do
+for i in {0..4}; do
   az vm create \
     --resource-group $RESOURCE_GROUP \
     --name worker-$i \
     --size $VM_SIZE \
     --image $IMAGE \
-    --admin-username azureuser \
+    --admin-username "$(whoami)" \
     --ssh-key-value $SSH_PUBLIC_KEY \
     --vnet-name $VNET_NAME \
     --subnet $SUBNET_NAME \
     --private-ip-address 10.240.0.2${i} \
     --nsg $NSG_NAME \
-    --tags $TAGS
+    --tags $TAGS \
+    --data-disk-sizes-gb $DISK_SIZE_GB
 done
 
 # List instances with tags
