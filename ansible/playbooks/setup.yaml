@@ -183,14 +183,22 @@
             createCustomResource: true
           prometheus:
             prometheusSpec:
+              replicas: 1
               serviceMonitorSelectorNilUsesHelmValues: false
               podMonitorSelectorNilUsesHelmValues: false
           grafana:
+            replicaCount: 1
             adminUser: "{{ grafana_admin_user }}"
             adminPassword: "{{ grafana_admin_password }}"
           alertmanager:
             alertmanagerSpec:
               replicas: 1
+          defaultRules:
+            create: false
+          nodeExporter:
+            enabled: false
+          kubeStateMetrics:
+            enabled: false
 
 - name: Deploy spark-operator helm chart
   hosts: leader
@@ -300,13 +308,33 @@
         create_namespace: true
         atomic: true
         wait: true
-        set_values:
-          - controllerManager.resources.requests.cpu=50m
-          - controllerManager.resources.requests.memory=128Mi
-          - controllerManager.resources.requests.ephemeral-storage=100Mi
-          - controllerManager.resources.limits.ephemeral-storage=200Mi
-          - controllerManager.resources.limits.cpu=100m
-          - controllerManager.resources.limits.memory=256Mi
+        # reducing resource usage as much as possible because we only need 1 PodChaos resource
+        values:
+          dashboard:
+            create: false
+          chaosDaemon:
+            securityMode: false
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+          controllerManager:
+            leaderElection:
+              enabled: false
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+          podSecurityPolicy:
+            enabled: false
+          metrics:
+            enabled: false
 
     - name: Deploy a PodChaos resource for random termination of Spark executor pods
       vars:

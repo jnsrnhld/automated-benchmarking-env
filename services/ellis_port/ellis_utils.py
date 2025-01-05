@@ -53,10 +53,14 @@ def compute_predictions(
         y_predict[:] = ernest.predict(x_predict)
     else:
         # Use the Bell model for interpolation and Ernest for extrapolation
-        bell = Bell()
-        bell.fit(x, y)
-        y_predict[interpolation_mask] = bell.predict(x_predict_interpolation)
-        y_predict[~interpolation_mask] = ernest.predict(x_predict_extrapolation)
+        try:
+            bell = Bell()
+            bell.fit(x, y)
+            y_predict[interpolation_mask] = bell.predict(x_predict_interpolation)
+            y_predict[~interpolation_mask] = ernest.predict(x_predict_extrapolation)
+        except Exception as e:
+            print(f"Bell failed: {e}")
+            y_predict[:] = ernest.predict(x_predict)
 
     return y_predict.astype(int)
 
@@ -257,12 +261,13 @@ class EllisUtils:
         future_jobs_runtimes = np.sum(remaining_runtimes[1:], axis=0)
 
         current_runtime = job_end_time - app_start_time
-        print(f"Current runtime: {current_runtime}")
         next_job_runtime = next_job_runtimes[current_scale_out - min_executors]
-        print(f"Next job runtime: {next_job_runtime}")
         remaining_target_runtime = target_runtime - current_runtime - next_job_runtime
-        print(f"Remaining target runtime: {remaining_target_runtime}")
         remaining_runtime_prediction = future_jobs_runtimes[current_scale_out - min_executors]
+
+        print(f"Current runtime: {current_runtime}")
+        print(f"Next job runtime: {next_job_runtime}")
+        print(f"Remaining target runtime: {remaining_target_runtime}")
         print(f"Remaining runtime prediction: {remaining_runtime_prediction}")
 
         if remaining_runtime_prediction > remaining_target_runtime * relative_slack_up + absolute_slack_up:

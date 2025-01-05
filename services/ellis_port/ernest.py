@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import nnls
+from scipy.optimize import nnls, lsq_linear
 
 from services.ellis_port.univariate_predictor import UnivariatePredictor
 
@@ -27,13 +27,15 @@ class Ernest(UnivariatePredictor):
         Returns:
         self: The fitted model with updated coefficients.
         """
+        x, y = x.flatten(), y.flatten()
         X = self._fmap(x)
         try:
-            (coeff, _) = nnls(X, y)
+            coeff, res = nnls(X, y, maxiter=10000)
             self.coeff = coeff
-        except:
-            # prevents matrix is singular error
-            self.coeff = np.mean(y)
+        except (RuntimeError, ValueError) as e:
+            print(f"nnls failed... x: {X}, y: {y}, Exception: {e}")
+            result = lsq_linear(X, y, bounds=(0, np.inf))
+            self.coeff = result.x
         return self
 
     def _predict(self, x: np.ndarray):
@@ -46,5 +48,6 @@ class Ernest(UnivariatePredictor):
         Returns:
         np.ndarray: The predicted values.
         """
+        x = x.flatten()
         X = self._fmap(x)
         return np.dot(X, self.coeff)

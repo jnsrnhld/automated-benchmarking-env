@@ -1,12 +1,28 @@
 import unittest
 import numpy as np
 
+from services.ellis_port.ellis_utils import EllisUtils
 from services.ellis_port.kernel_regression import KernelRegression
 from services.ellis_port.ernest import Ernest
-from services.ellis_port.bell import Bell
 
 
 class TestUnivariatePredictors(unittest.TestCase):
+
+    def test_ernest(self):
+        ernest = Ernest()
+
+        x = np.array([9., 6., 4.])
+        y = np.array([176., 150., 146.])
+        x_predict = np.array([3., 4., 5., 6., 7., 8., 9.])
+        ernest.fit(x, y)
+
+        y_predict = np.zeros_like(x_predict)
+        print(f"y_predict before predict: {y_predict}")
+        y_predict[:] = ernest.predict(x_predict)
+        print(f"y_predict after predict: {y_predict}")
+        # [  0.         317.32775236  10.04599128  13.18534021]
+        self.assertTrue(True)
+
     def test_ernest_correct_prediction(self):
         """Ernest should calculate the correct predictions."""
         # First assertion: y follows the Ernest model

@@ -7,7 +7,7 @@ SUBNET_NAME="kubernetes-subnet"
 SUBNET_CIDR="10.240.0.0/24"
 NSG_NAME="kubespray-nsg"
 VM_SIZE="Standard_E8s_v5"
-DISK_SIZE_GB="2048"
+DISK_SIZE_GB="1024"
 IMAGE="Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest"
 TAGS="kubernetes-the-kubespray-way"
 SSH_PUBLIC_KEY="$HOME/.ssh/id_rsa.pub"
@@ -72,7 +72,7 @@ for i in {0..0}; do
     --private-ip-address 10.240.0.1${i} \
     --nsg $NSG_NAME \
     --tags $TAGS \
-    --data-disk-sizes-gb $DISK_SIZE_GB
+    --os-disk-size-gb $DISK_SIZE_GB
 done
 
 # Create worker VMs
@@ -89,7 +89,7 @@ for i in {0..4}; do
     --private-ip-address 10.240.0.2${i} \
     --nsg $NSG_NAME \
     --tags $TAGS \
-    --data-disk-sizes-gb $DISK_SIZE_GB
+    --os-disk-size-gb $DISK_SIZE_GB
 done
 
 # List instances with tags

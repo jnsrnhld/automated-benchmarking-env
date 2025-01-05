@@ -43,5 +43,6 @@ class InterpolationSplits:
         xtrain, ytrain = self.x[~m], self.y[~m]
         xtest, ytest = self.x[m], self.y[m]
 
-        self.i_iter += 1
-        return xtrain, xtest, ytrain, ytest
+        self.i_iter = self.i_iter + 1
+
+        return xtrain, ytrain, xtest, ytest

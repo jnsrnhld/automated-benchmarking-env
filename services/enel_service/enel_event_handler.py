@@ -1,9 +1,8 @@
 import asyncio
 
-from bson.json_util import ObjectId
+from bson.objectid import ObjectId
 from pydantic import BaseModel
 
-from .modeling.handlers_training import handle_trigger_model_training
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model

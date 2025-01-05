@@ -36,13 +36,13 @@ workloads:
 
 # configuration
 is_adaptive: true
-runs: 10 # iterations of data generation and benchmark jobs
+runs: 5 # iterations of data generation and benchmark jobs
 skip_data_generation: true # data generation can be skipped if you run the benchmark multiple times
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
-driver_cores: 3
+driver_cores: 2
 executor_cores: 3
 driver_memory: 12G
 executor_memory: 18G
-target_runtime: 300000
-min_executors: 3
+target_runtime: 180000
+min_executors: 2
 max_executors: 9

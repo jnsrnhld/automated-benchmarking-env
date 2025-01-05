@@ -1,3 +1,4 @@
+import random
 from pymongo import MongoClient, ASCENDING
 
 from services.event_handler import EventHandler, AppStartMessage, JobStartMessage, JobEndMessage, ResponseMessage, \
@@ -30,15 +31,25 @@ class EllisEventHandler(EventHandler):
         app_specs = message.app_specs
         self.running_applications[app_event_id] = RunningApplication(app_event_id, message)
 
-        initial_scaleout = self.ellis_utils.compute_initial_scale_out(
-            app_event_id, message.app_name, app_specs.min_executors, app_specs.max_executors, app_specs.target_runtime
-        )
-        print(f"Recommending initial scale out: {initial_scaleout}")
+        if message.is_adaptive:
+            initial_scaleout = self.ellis_utils.compute_initial_scale_out(
+                app_event_id, message.app_name, app_specs.min_executors, app_specs.max_executors, app_specs.target_runtime
+            )
+            print(f"Dataset size: {message.app_specs.datasize_mb}")
+            print(f"Recommending initial scale out: {initial_scaleout}")
+            return ResponseMessage(
+                app_event_id=app_event_id,
+                recommended_scale_out=initial_scaleout
+            )
 
-        return ResponseMessage(
-            app_event_id=app_event_id,
-            recommended_scale_out=initial_scaleout
-        )
+        # using random scale-out between min/max for training
+        else:
+            initial_scaleout=random.randint(message.app_specs.min_executors, message.app_specs.max_executors)
+            print(f"Recommending initial scale out: {initial_scaleout}")
+            return ResponseMessage(
+                app_event_id=app_event_id,
+                recommended_scale_out=initial_scaleout
+            )
 
     def handle_job_start(self, message: JobStartMessage) -> ResponseMessage:
         self.insert_job_event(message.app_event_id, message)

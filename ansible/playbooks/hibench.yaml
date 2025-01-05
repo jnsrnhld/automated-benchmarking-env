@@ -92,3 +92,4 @@
       command: bash "{{ hibench_dir }}/bin/workloads/{{ item.1.category }}/{{ item.1.name }}/spark/run.sh"
       loop: "{{ range(0, runs) | product(workloads) | list }}"
       when: item.1.enabled
+      any_errors_fatal: true

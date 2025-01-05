@@ -31,7 +31,7 @@ k8s_chaos_mesh_namespace: "chaos-mesh"
 storage_class: "local-storage"
 
 # Chaos Mesh
-termination_window: "*/20 * * * *" # Cron expression, termination every 15 minutes
+termination_window: "*/5 * * * *" # Cron expression, termination every 5 minutes
 
 # Grafana
 grafana_admin_user: "admin"

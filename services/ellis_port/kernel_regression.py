@@ -1,8 +1,8 @@
 import numpy as np
 import scipy as sp
 
-from .univariate_predictor import UnivariatePredictor
 from .cross_validation import cross_validation_score
+from .univariate_predictor import UnivariatePredictor
 from .interpolation_splits import InterpolationSplits
 
 class KernelRegression(UnivariatePredictor):
@@ -24,7 +24,7 @@ class KernelRegression(UnivariatePredictor):
         Returns:
         np.ndarray: Feature mapped array.
         """
-        return np.vstack([x**i for i in range(self.degree+1)]).T
+        return np.vstack([x ** i for i in range(self.degree + 1)]).T
 
     def _predict_single(self, X, y, x, w):
         """
@@ -37,7 +37,17 @@ class KernelRegression(UnivariatePredictor):
         np.ndarray: Predicted values.
         """
         XTW = X.T * w
-        c = np.linalg.solve(np.dot(XTW, X)+self.tol*np.eye(X.shape[1]), np.dot(XTW, y))
+        matrix_x = np.dot(XTW, X) + self.tol * np.eye(X.shape[1])
+        matrix_b = np.dot(XTW, y)
+
+        try:
+            c = np.linalg.solve(matrix_x, matrix_b)
+        except:
+            print("Could not compute solution, so either matrix_x is singular or not square.")
+            print("Will try now with the pseudo-inverse of matrix_x...")
+            c = np.linalg.pinv(matrix_x).dot(matrix_b)
+            print("Success with pseudo-inverse of matrix_x!")
+
         ypred = np.dot(x, c)
         return ypred
 
@@ -49,6 +59,7 @@ class KernelRegression(UnivariatePredictor):
         return ypred
 
     def _fit(self, x, y):
+        x, y = x.flatten(), y.flatten()
         if self.bw is None:
             models = [KernelRegression(bw=bw) for bw in np.linspace(1, 100, 100)]
             scores = cross_validation_score(models, InterpolationSplits(x, y))
@@ -63,11 +74,13 @@ class KernelRegression(UnivariatePredictor):
         return self
 
     def _predict(self, xs):
+        xs = xs.flatten()
+
         xs = np.atleast_1d(xs)
         x, y, h = self.x, self.y, self._bw
 
         D = sp.spatial.distance.cdist(np.atleast_2d(xs).T, np.atleast_2d(x).T, metric='sqeuclidean')
-        W = np.exp(-D/(2*h**2))
+        W = np.exp(-D / (2 * h ** 2))
 
         X = self._fmap(x)
         X0 = self._fmap(xs)
