@@ -7,6 +7,7 @@ pytest
 py4j==0.10.9.7
 numpy==2.1.1
 scipy==1.14.1
+matplotlib==3.9.4
 
 # enel
 --find-links https://pytorch-geometric.com/whl/torch-2.4.0+cpu.html
