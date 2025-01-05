@@ -12,4 +12,5 @@ To run benchmarks, adjust the [benchmark definition](ansible/benchmark-definitio
 
 ### Generic Spark listener
 
-The prototypical implementation for the generic Spark listener can be found [here](listener). 
+The prototypical implementation for the generic Spark listener can be found 
+[here](listener/src/main/scala/de/tu_berlin/jarnhold/listener/CentralizedSparkListener.scala). 
