@@ -19,6 +19,7 @@ spec:
   monitoring:
     exposeDriverMetrics: true
     exposeExecutorMetrics: true
+  memoryOverheadFactor: "0.3"
   driver:
     cores: {{ driver_cores }}
     memory: "{{ driver_memory }}"

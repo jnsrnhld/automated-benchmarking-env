@@ -300,6 +300,13 @@
         create_namespace: true
         atomic: true
         wait: true
+        set_values:
+          - controllerManager.resources.requests.cpu=50m
+          - controllerManager.resources.requests.memory=128Mi
+          - controllerManager.resources.requests.ephemeral-storage=100Mi
+          - controllerManager.resources.limits.ephemeral-storage=200Mi
+          - controllerManager.resources.limits.cpu=100m
+          - controllerManager.resources.limits.memory=256Mi
 
     - name: Deploy a PodChaos resource for random termination of Spark executor pods
       vars:

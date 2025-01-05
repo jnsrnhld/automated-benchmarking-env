@@ -24,7 +24,7 @@
 
     - name: Template HiBench config
       vars:
-        parallelism: "{{ groups['follower'] | length }}"
+        parallelism: "{{ max_executors }}"
       template:
         src: "{{ hibench_template_dir }}/hibench.conf"
         dest: "{{ remote_template_dir }}/hibench.conf"

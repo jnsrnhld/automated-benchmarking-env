@@ -57,7 +57,12 @@ class EllisEventHandler(EventHandler):
                 message.app_time,
                 message.num_executors
             )
+
+            if recommended_scale_out == -1:
+                recommended_scale_out = message.num_executors
+
             print(f"Recommending scale out: {recommended_scale_out}")
+
             return ResponseMessage(
                 app_event_id=message.app_event_id,
                 recommended_scale_out=recommended_scale_out,
