@@ -1,8 +1,10 @@
 import asyncio
+import threading
 
 from bson.objectid import ObjectId
 from pydantic import BaseModel
 
+from .modeling.handlers_training import handle_trigger_model_training
 from .common.db_schemes import ApplicationExecutionModel, GlobalSpecsModel, OptionalSpecsModel, MasterSpecsModel, \
     WorkerSpecsModel
 from .submission.handlers import alter_submission_model
@@ -14,6 +16,11 @@ from .common.apis.mongo_api import MongoApi
 from ..event_handler import EventHandler, AppEndMessage, ResponseMessage, JobEndMessage, JobStartMessage, \
     AppStartMessage, EventType, Stage
 
+def run_async_in_background(coroutine):
+    loop = asyncio.new_event_loop()
+    thread = threading.Thread(target=loop.run_until_complete, args=(coroutine,))
+    thread.daemon = True
+    thread.start()
 
 class EnelEventHandler(EventHandler):
     def __init__(self):
@@ -30,19 +37,21 @@ class EnelEventHandler(EventHandler):
 
         # add the application
         application_execution_model = application.to_application_execution_model(message)
-        updated: ApplicationExecutionModel = asyncio.run(
+        app_model: ApplicationExecutionModel = asyncio.run(
             alter_submission_model(application_execution_model, self.hdfs_api, self.mongo_api)
         )
-        initial_scaleout = updated.worker_specs.scale_out
+        initial_scaleout = app_model.worker_specs.scale_out
         application.scale_out_map[0] = initial_scaleout
 
         # update it
         update_request = application.to_update_information_request(message)
         asyncio.run(handle_update_information(update_request, self.mongo_api))
 
-        # TODO implement training flag
-        # training_request = application.to_trigger_model_training_request(application_execution_model)
-        # asyncio.run(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
+        if message.is_training:
+            training_request = application.to_trigger_model_training_request(application_execution_model)
+            run_async_in_background(handle_trigger_model_training(training_request, self.mongo_api, self.hdfs_api))
+
+        print(f"Recommending initial scale-out: {initial_scaleout}")
 
         return ResponseMessage(
             app_event_id=app_event_id,
@@ -65,11 +74,13 @@ class EnelEventHandler(EventHandler):
         application.try_handle_online_scale_out_request(message, self.hdfs_api, self.mongo_api)
 
         if app_scale_out_map[next_job_id] != app_scale_out_map.get(job_id):
+            print(f"Recommending next scale-out: {app_scale_out_map[next_job_id]}")
             return ResponseMessage(
                 app_event_id=message.app_event_id,
                 recommended_scale_out=app_scale_out_map[next_job_id],
             )
         else:
+            print(f"Scale-out same in next job...")
             return self.no_op_job_event_recommendation(message)
 
     def handle_application_end(self, message: AppEndMessage) -> ResponseMessage:

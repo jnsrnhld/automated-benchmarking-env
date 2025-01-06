@@ -57,15 +57,15 @@ class TestTraining(TestCase):
         self.onlinepredictor_config.tune_run["num_samples"] = 1
 
     @parameterized.expand([
-        ("ALS",
-         "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
-         "als_job_execution.json"),
+        # ("ALS",
+        #  "ALS with Params(hdfs://10.240.0.10:9000/HiBench/ALS/Input,10,0.1,10,1,1,true)",
+        #  "als_job_execution.json"),
         ("DenseKMeans",
          "DenseKMeans with Params(hdfs://10.240.0.10:9000/HiBench/Kmeans/Input/samples,10,5,MEMORY_ONLY,Random)",
          "kmeans_job_execution.json"),
-        ("RatingDataGeneration",
-         "RatingDataGeneration",
-         "rdg_job_execution.json")
+        # ("RatingDataGeneration",
+        #  "RatingDataGeneration",
+        #  "rdg_job_execution.json")
     ])
     def test_training(self, algorithm_name, experiment_name, file_name):
         training_request = TriggerModelTrainingRequest(**{

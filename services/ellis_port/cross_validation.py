@@ -1,43 +1,19 @@
 import numpy as np
-from typing import List, Iterator, Tuple, Callable
-from .univariate_predictor import UnivariatePredictor
 
 
-def loss_func(ypred, ytest):
-    """
-    Computes the loss between the predicted and test values.
-
-    Parameters:
-    ypred (np.ndarray): Predicted values.
-    ytest (np.ndarray): True test values.
-
-    Returns:
-    float: The computed loss value.
-    """
-    return np.mean(np.abs((ypred - ytest) / ytest))
+class MeanRelativeError(object):
+    def __call__(self, y_pred, y):
+        return np.mean(np.abs((y_pred - y) / y))
 
 
-def cross_validation_score(
-        models: List[UnivariatePredictor],
-        splits: Iterator[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]
-) -> np.ndarray:
-    """
-    Evaluates multiple models using cross-validation splits and a loss function.
+def cv_score(models, splits):
+    scores = np.zeros((len(models), len(splits)))
+    loss_func = MeanRelativeError()
 
-    Parameters:
-    models (List[UnivariatePredictor]): A list of models to evaluate.
-    splits (Iterator[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]):
-        An iterator that provides train-test splits for cross-validation.
+    for i, ((xtrain, ytrain), (xtest, ytest)) in enumerate(splits):
+        for j, model in enumerate(models):
+            model.fit((xtrain, ytrain))
+            ypred = model.predict((xtest, ytest))
+            scores[j, i] = loss_func(ypred, ytest)
 
-    Returns:
-    np.ndarray: An array containing the loss for each model.
-    """
-    results = []
-    for model in models:
-        losses = []
-        for xtrain, xtest, ytrain, ytest in splits:
-            model.fit(xtrain, ytrain)
-            ypred = model.predict(xtest)
-            losses.append(loss_func(ypred, ytest))
-        results.append(np.mean(losses))
-    return np.array(results)
+    return scores

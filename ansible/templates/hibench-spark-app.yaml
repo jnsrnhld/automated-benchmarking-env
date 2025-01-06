@@ -54,6 +54,7 @@ spec:
     # listener conf
     "spark.extraListeners": "de.tu_berlin.jarnhold.listener.CentralizedSparkListener"
     "spark.customExtraListener.isAdaptive": "{{ is_adaptive }}"
+    "spark.customExtraListener.isTraining": "{{ is_training }}"
     "spark.customExtraListener.bridgeServiceAddress": "{{ bridge_service_address }}"
     "spark.customExtraListener.minExecutors": "{{ min_executors }}"
     "spark.customExtraListener.maxExecutors": "{{ max_executors }}"

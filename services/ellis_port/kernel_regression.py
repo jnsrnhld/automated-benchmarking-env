@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 
-from .cross_validation import cross_validation_score
+from .cross_validation import cv_score
 from .univariate_predictor import UnivariatePredictor
 from .interpolation_splits import InterpolationSplits
 
@@ -62,7 +62,7 @@ class KernelRegression(UnivariatePredictor):
         x, y = x.flatten(), y.flatten()
         if self.bw is None:
             models = [KernelRegression(bw=bw) for bw in np.linspace(1, 100, 100)]
-            scores = cross_validation_score(models, InterpolationSplits(x, y))
+            scores = cv_score(models, InterpolationSplits(x, y))
             scores = np.mean(scores, axis=1)
             idx = np.argmin(scores)
             self._bw = models[idx].bw

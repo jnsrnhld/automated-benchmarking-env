@@ -64,6 +64,7 @@
           # listener conf
           listener_jar: {{ lister_jar_full_path }}
           is_adaptive: {{ is_adaptive }}
+          is_training: {{ is_training }}
           # app spec
           bridge_service_address: {{ bridge_service_address }}
           target_runtime: {{ target_runtime }}

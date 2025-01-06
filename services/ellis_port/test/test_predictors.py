@@ -1,12 +1,21 @@
 import unittest
 import numpy as np
 
-from services.ellis_port.ellis_utils import EllisUtils
+from services.ellis_port.bell import Bell
 from services.ellis_port.kernel_regression import KernelRegression
 from services.ellis_port.ernest import Ernest
 
 
 class TestUnivariatePredictors(unittest.TestCase):
+
+    def test_bell(self):
+        x = np.array([3., 7., 9., 9., 9., 7., 9., 9., 2., 8., 3., 5., 5., 7., 3.])
+        y = np.array([510., 470., 526., 636., 548., 538., 602., 506., 487., 569., 662.,  636., 498., 528., 596.])
+
+        bell = Bell()
+        bell.fit(x, y)
+
+        self.assertTrue(True)
 
     def test_ernest(self):
         ernest = Ernest()

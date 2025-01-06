@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Optional, List
 
+from .cross_validation import cv_score
 from .univariate_predictor import UnivariatePredictor
 from .ernest import Ernest
 from .kernel_regression import KernelRegression
 from .interpolation_splits import InterpolationSplits
-from .cross_validation import cross_validation_score
 
 class Bell(UnivariatePredictor):
     """
@@ -29,12 +29,13 @@ class Bell(UnivariatePredictor):
             raise ValueError("Input and target arrays must have the same length.")
 
         splits = InterpolationSplits(x, y)
+
         models = [
-            Ernest(),  # Using Ernest model
-            KernelRegression(degree=2),  # Polynomial regression with degree 2
+            Ernest(),
+            KernelRegression(),
         ]
 
-        scores = cross_validation_score(models, splits)
+        scores = cv_score(models, splits)
         best_idx = np.argmin(scores)
         self.best_model = models[best_idx].fit(x, y)
         return self
