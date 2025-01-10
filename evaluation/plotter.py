@@ -8,7 +8,7 @@ executor_data = pd.read_csv(executor_monitoring_path)
 application_data = pd.read_csv(application_runs_path)
 
 # Convert times to datetime objects
-executor_data['Time'] = pd.to_datetime(executor_data['Time'])
+executor_data['Time'] = pd.to_datetime('2025-01-05 ' + executor_data['Time'])
 application_data['Start Time Full'] = pd.to_datetime('2025-01-05 ' + application_data['Start Time'])
 application_data['End Time Full'] = pd.to_datetime('2025-01-05 ' + application_data['End Time'])
 
@@ -18,7 +18,7 @@ application_data['Application Index'] = application_data.index + 1
 # Assign Phases and filter out training runs
 # Training runs: 1-10
 # 3-minute target: 11-15
-# 8-minute target: 16-20
+# 9-minute target: 16-20
 # 5-minute target: 21-25
 application_data['Phase'] = pd.cut(
     application_data['Application Index'],
@@ -29,7 +29,7 @@ application_data['Phase'] = pd.cut(
 # Filter out training runs
 application_data = application_data[application_data['Phase'] != 'Training']
 
-# Step 1: Normalize Time for Non-Training Runs
+# Normalize Time for Non-Training Runs
 normalized_data = []
 for _, app in application_data.iterrows():
     app_executor_data = executor_data[
@@ -50,52 +50,45 @@ normalized_data = normalized_data.merge(
     on='Application Index'
 )
 
-# Step 2: Plotting
-# Set color mapping for phases
+# Adjusted Plotting
 phase_colors = {
     '3-min target': 'green',
     '9-min target': 'orange',
     '5-min target': 'red'
 }
 
-# Create the plot
-plt.figure(figsize=(16, 8))
-
 for phase, color in phase_colors.items():
+    plt.figure(figsize=(12, 3))
     phase_data = normalized_data[normalized_data['Phase'] == phase]
+
+    # Plot executor counts for each application run
     for app_index in phase_data['Application Index'].unique():
         app_data = phase_data[phase_data['Application Index'] == app_index]
-        plt.plot(
-            app_data['Relative Time'] / 60,  # Convert seconds to minutes
+        plt.step(
+            app_data['Relative Time'] / 60,  # Convert seconds to minutes for x-axis
             app_data['Executor Count'],
+            where='post',
             color=color,
-            alpha=0.7
+            alpha=0.8,
         )
 
-# Add runtime targets as vertical lines
-runtime_targets = [3, 9, 5]  # in minutes
-target_labels = ['3-min', '9-min', '5-min']
-colors = ['green', 'orange', 'red']
-
-for target, label, color in zip(runtime_targets, target_labels, colors):
+    # Add runtime target as vertical line
+    runtime_target = int(phase.split('-')[0])  # Extract runtime target in minutes
     plt.axvline(
-        x=target, color=color, linestyle='--', alpha=0.8, label=f'{label} (Target)'
+        x=runtime_target, color=color, linestyle='--', alpha=0.8, label=f'{runtime_target}-min Target'
     )
 
-# Add runtime targets as horizontal dashed lines
-plt.axhline(y=0, color='black', linestyle='--', alpha=0.5, label="Executor Count = 0")
+    # Labels and legend
+    plt.title(f'{phase}', fontsize=14)
+    plt.xlabel('Application Runtime in Minutes', fontsize=12)
+    plt.ylabel('Executor Count', fontsize=12)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.axhline(y=0, color='black', linestyle='--', alpha=0.5, label="Executor Count = 0")
+    plt.legend(fontsize=10, loc='upper right')
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
 
-# Labels and legend
-plt.xlabel('Application Runtime in Minutes', fontsize=12)
-plt.ylabel('Executor Count', fontsize=12)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-
-handles = [plt.Line2D([0], [0], color=color, lw=3, label=label) for label, color in phase_colors.items()]
-plt.legend(handles=handles, title='Execution Phase', fontsize=12, title_fontsize=14, loc='upper right')
-
-plt.grid(alpha=0.3)
-
-# Show the plot
-plt.tight_layout()
-plt.savefig("executor_count_plot.svg", format="svg")
+    # Save the plot for the specific phase
+    plt.savefig(f"executor_count_{phase.replace(' ', '_')}.svg", format="svg")
+    plt.close()

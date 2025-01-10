@@ -1,6 +1,7 @@
  # versions
 kube_version: "v1.29.5"
 java_version: "8"
+python_version: ""
 helm_version: "3.15.1"
 spark_operator_version: "2.0.2"
 mongo_db_chart_version: "15.6.14"

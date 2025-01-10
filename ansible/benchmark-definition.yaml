@@ -40,7 +40,7 @@ is_training: false # flag to indicate model training shall be triggered
 runs: 10 # iterations of data generation and benchmark jobs
 skip_data_generation: true # data generation can be skipped if you run the benchmark multiple times
 bridge_service_address: "tcp://{{ hostvars['leaderNode']['ip'] }}:5555"
-driver_cores: 2
+driver_cores: 3
 executor_cores: 3
 driver_memory: 12G
 executor_memory: 18G
