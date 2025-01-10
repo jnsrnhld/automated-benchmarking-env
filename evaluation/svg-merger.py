@@ -3,8 +3,8 @@ from xml.etree import ElementTree as ET
 # Paths to the individual SVG files
 svg_files = [
     "executor_count_3-min_target.svg",
+    "executor_count_5-min_target.svg",
     "executor_count_9-min_target.svg",
-    "executor_count_5-min_target.svg"
 ]
 
 # Create a new SVG root
