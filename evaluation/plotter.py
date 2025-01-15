@@ -16,10 +16,6 @@ application_data['End Time Full'] = pd.to_datetime('2025-01-05 ' + application_d
 application_data['Application Index'] = application_data.index + 1
 
 # Assign Phases and filter out training runs
-# Training runs: 1-10
-# 3-minute target: 11-15
-# 9-minute target: 16-20
-# 5-minute target: 21-25
 application_data['Phase'] = pd.cut(
     application_data['Application Index'],
     bins=[0, 10, 15, 20, 25],
@@ -70,13 +66,17 @@ for phase, color in phase_colors.items():
             where='post',
             color=color,
             alpha=0.8,
-        )
+            )
 
     # Add runtime target as vertical line
     runtime_target = int(phase.split('-')[0])  # Extract runtime target in minutes
     plt.axvline(
         x=runtime_target, color=color, linestyle='--', alpha=0.8, label=f'{runtime_target}-min Target'
     )
+
+    # Fixed axis scales
+    plt.xlim(0, 11)  # Runtime from 0 to 11 minutes
+    plt.ylim(0, 10)  # Executor count from 0 to 10
 
     # Labels and legend
     plt.title(f'{phase}', fontsize=14)
